@@ -6,7 +6,7 @@ const KEY = '@fitflow.store';
 export type WorkoutSession = { id: string; type: string; startTs: number; endTs: number; durationSec: number; distanceKm: number; calories: number; };
 export type DayEntry = { date: string; steps: number; water: number; sleepMin: number; caloriesBurned: number; distanceKm: number; };
 export type Profile = { name: string; gender: 'Male' | 'Female' | 'Other'; birthYear: number; weightKg: number; heightCm: number; stepLengthCm: number | 'auto'; };
-export type Settings = { stepGoal: number; waterGoalMl: number; sleepGoalHr: number; glassSizeMl: number; distanceUnit: 'km' | 'mi'; weightUnit: 'kg' | 'lb'; heightUnit: 'cm' | 'ft'; notifSteps: boolean; notifWater: boolean; notifWorkout: boolean; notifStreak: boolean; onboarded: boolean; permsRequested: boolean; langSelected: boolean; widgetEnabled: boolean; };
+export type Settings = { stepGoal: number; waterGoalMl: number; sleepGoalHr: number; glassSizeMl: number; distanceUnit: 'km' | 'mi'; weightUnit: 'kg' | 'lb'; heightUnit: 'cm' | 'ft'; notifSteps: boolean; notifWater: boolean; notifWorkout: boolean; notifStreak: boolean; onboarded: boolean; permsRequested: boolean; langSelected: boolean; widgetEnabled: boolean; homeAppearance: 'dark' | 'light'; };
 export type HabitState = Record<string, string[]>; // habitId -> array of dates completed
 
 export type AppState = {
@@ -24,7 +24,7 @@ const todayKey = () => {
 
 export const DEFAULT_STATE: AppState = {
   profile: { name: 'Guest', gender: 'Male', birthYear: 1995, weightKg: 70, heightCm: 175, stepLengthCm: 'auto' },
-  settings: { stepGoal: 15000, waterGoalMl: 2500, sleepGoalHr: 8, glassSizeMl: 250, distanceUnit: 'km', weightUnit: 'kg', heightUnit: 'cm', notifSteps: true, notifWater: true, notifWorkout: true, notifStreak: true, onboarded: false, permsRequested: false, langSelected: false, widgetEnabled: false },
+  settings: { stepGoal: 15000, waterGoalMl: 2500, sleepGoalHr: 8, glassSizeMl: 250, distanceUnit: 'km', weightUnit: 'kg', heightUnit: 'cm', notifSteps: true, notifWater: true, notifWorkout: true, notifStreak: true, onboarded: false, permsRequested: false, langSelected: false, widgetEnabled: false, homeAppearance: 'dark' },
   days: {},
   workouts: [],
   habits: {},

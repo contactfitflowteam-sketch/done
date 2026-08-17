@@ -102,6 +102,17 @@ export default function Settings() {
             <Text style={{ color: theme.text, fontWeight: '700', marginLeft: 4 }}>{t('theme')}</Text>
             <ThemeSwatchRow />
           </GlassCard>
+          <View style={{ marginTop: 12 }}>
+            <GlassCard style={{ padding: 0, paddingHorizontal: 14 }}>
+              <Row
+                icon="contrast"
+                label="Home Card Style"
+                value={s.homeAppearance === 'light' ? 'Light' : 'Dark'}
+                onPress={() => saveSettings({ homeAppearance: s.homeAppearance === 'light' ? 'dark' : 'light' })}
+                testID="settings-home-appearance"
+              />
+            </GlassCard>
+          </View>
         </View>
 
         <Section title={t('social')}>
