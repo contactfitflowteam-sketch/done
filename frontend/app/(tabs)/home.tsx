@@ -12,23 +12,24 @@ import { useI18n } from '@/src/i18n';
 import { Sheet, PillButton, AdBanner, NativeAdCard } from '@/src/components/ui';
 import { trackInteraction, maybeShowInterstitial } from '@/src/ads/manager';
 
-// -------- Light-theme palette used only on the Home screen (matches reference image #2) --------
+// -------- Dark-theme palette used on the Home screen (matches reference image #1 – premium black + orange glow) --------
 const L = {
-  cardBg: '#F7F6F1',        // off-white premium card
-  cardBg2: '#FFFFFF',
-  cardShadow: '#000000',
-  textPrimary: '#1A1A1A',
-  textSecondary: '#6B6B6B',
-  textFaint: '#9A9A9A',
-  divider: '#EFECE4',
-  ringTrackWhite: '#F0EDE3',
-  streakChipBg: '#151515',
+  cardBg: '#101010',        // deep glass card
+  cardBg2: '#161616',
+  cardShadow: '#FF7A00',
+  textPrimary: '#FFFFFF',
+  textSecondary: '#B8B8B8',
+  textFaint: '#6B6B6B',
+  divider: '#1E1E1E',
+  ringTrackWhite: '#FFFFFF',
+  streakChipBg: '#171717',
   streakChipText: '#FFFFFF',
-  navBg: '#FFFFFF',
+  navBg: '#0C0C0C',
+  cardBorder: 'rgba(255,122,0,0.22)',
 };
 
 const ORANGE = '#FF7A00';
-const ORANGE_SOFT = '#FFE7D2';
+const ORANGE_SOFT = 'rgba(255,122,0,0.16)';
 
 // -------- Big Step Ring (white track + orange progress) --------
 function BigStepRing({ steps, goal, size = 220 }: { steps: number; goal: number; size?: number }) {
@@ -46,7 +47,7 @@ function BigStepRing({ steps, goal, size = 220 }: { steps: number; goal: number;
             <Stop offset="100%" stopColor="#FF9A2F" />
           </LinearGradient>
         </Defs>
-        {/* White track */}
+        {/* White track (matches reference #1: white unfilled + orange progress) */}
         <Circle cx={size / 2} cy={size / 2} r={r} stroke="#FFFFFF" strokeWidth={stroke} fill="none" />
         {/* Progress */}
         <Circle
@@ -67,8 +68,8 @@ function BigStepRing({ steps, goal, size = 220 }: { steps: number; goal: number;
           {steps.toLocaleString()}
         </Text>
         <Text style={{ color: L.textSecondary, fontSize: 13, marginTop: 2 }}>Steps</Text>
-        <View style={{ marginTop: 8, backgroundColor: ORANGE, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 }}>
-          <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '800' }}>{Math.round(pct * 100)}% Complete</Text>
+        <View style={{ marginTop: 8, backgroundColor: '#1A1A1A', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,122,0,0.4)' }}>
+          <Text style={{ color: ORANGE, fontSize: 11, fontWeight: '800' }}>{Math.round(pct * 100)}% Complete</Text>
         </View>
       </View>
     </View>
@@ -102,7 +103,7 @@ function WeeklyChart({ current, previous, height = 170 }: { current: number[]; p
         {/* Grid lines + Y labels */}
         {yTicks.map((v) => (
           <G key={v}>
-            <SvgLine x1={padL} x2={W - padR} y1={yFor(v)} y2={yFor(v)} stroke="#ECE8DD" strokeWidth={1} />
+            <SvgLine x1={padL} x2={W - padR} y1={yFor(v)} y2={yFor(v)} stroke="#242424" strokeWidth={1} />
             <SvgText x={padL - 6} y={yFor(v) + 4} fontSize={10} fill={L.textFaint} textAnchor="end">
               {v === 0 ? '0' : `${v / 1000}K`}
             </SvgText>
@@ -531,11 +532,13 @@ const styles = StyleSheet.create({
     backgroundColor: L.cardBg,
     borderRadius: 28,
     padding: 18,
+    borderWidth: 1,
+    borderColor: L.cardBorder,
     shadowColor: ORANGE,
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
+    shadowOpacity: 0.55,
+    shadowRadius: 26,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 14,
   },
   mainCardHeader: {
     flexDirection: 'row',
@@ -547,12 +550,12 @@ const styles = StyleSheet.create({
   editGoalBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1B1B1B',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: L.divider,
+    borderColor: L.cardBorder,
   },
   editGoalTxt: { color: L.textPrimary, marginLeft: 6, fontWeight: '700', fontSize: 12 },
 
@@ -569,11 +572,13 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 10,
     minHeight: 116,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: L.cardBorder,
+    shadowColor: ORANGE,
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    elevation: 4,
   },
   statIconWrap: {
     width: 30,
@@ -583,6 +588,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 6,
+    shadowColor: ORANGE,
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 4,
   },
   statLabel: { color: L.textSecondary, fontSize: 10, fontWeight: '700' },
   statValue: { color: L.textPrimary, fontSize: 18, fontWeight: '900', marginTop: 2 },
@@ -591,7 +600,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     height: 4,
     borderRadius: 3,
-    backgroundColor: '#EAE5D8',
+    backgroundColor: '#242424',
     overflow: 'hidden',
   },
   progressFill: {
@@ -605,11 +614,13 @@ const styles = StyleSheet.create({
     backgroundColor: L.cardBg,
     borderRadius: 24,
     padding: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: L.cardBorder,
+    shadowColor: ORANGE,
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
   weeklyHeader: {
     flexDirection: 'row',
@@ -630,6 +641,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: L.cardBorder,
   },
   bestDayTxt: { color: ORANGE, fontSize: 10, fontWeight: '800' },
 
@@ -638,11 +651,13 @@ const styles = StyleSheet.create({
     backgroundColor: L.cardBg,
     borderRadius: 24,
     padding: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: L.cardBorder,
+    shadowColor: ORANGE,
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
   dailyHeaderRow: {
     flexDirection: 'row',
@@ -656,12 +671,12 @@ const styles = StyleSheet.create({
   },
   goalMini: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0A0A0A',
     borderRadius: 14,
     padding: 10,
     minHeight: 96,
     borderWidth: 1,
-    borderColor: L.divider,
+    borderColor: L.cardBorder,
   },
   goalMiniIcon: {
     width: 28,
