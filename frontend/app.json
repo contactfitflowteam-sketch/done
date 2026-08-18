@@ -51,7 +51,27 @@
           "icon": "./assets/images/notification-icon.png",
           "color": "#FF7A00"
         }
-      ]
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "StepsWidget",
+              "label": "FitFlow Steps",
+              "description": "See your daily steps, goal and progress",
+              "minWidth": "180dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 2,
+              "previewImage": "./assets/images/widget-preview.png",
+              "updatePeriodMillis": 1800000,
+              "resizeMode": "horizontal|vertical"
+            }
+          ]
+        }
+      ],
+      "expo-android-pedometer"
     ],
     "experiments": {
       "typedRoutes": true

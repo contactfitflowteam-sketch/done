@@ -1,0 +1,25 @@
+{
+  "summary": "Frontend-only regression after adding native Android widget (react-native-android-widget) + expo-android-pedometer background step tracking. New ./index.js entry point (replacing expo-router/entry as main in package.json) bundles cleanly on web (Metro logs: 'Web Bundled ... index.js (1395 modules)'). Full first-launch flow verified end-to-end on mobile viewport (390x844): language-screen -> lang-en -> lang-continue -> onboarding-screen -> 3x onboarding-next-button -> permissions-screen -> perm-activity-button (no crash, resolves to denied on web as expected) -> perm-notif-button (no crash) -> perm-continue-button -> home-screen. All home sections render (home-ring-card, home-stats-row, home-weekly-card, home-daily-goals-card, home-add-steps-fab). FAB step-increment updates stats live (calories 0->40 kcal, distance 0.00->0.73 km after 2 taps = +1000 steps), confirming the new updateStepsWidget effect is a safe no-op on web. All 5 bottom tabs (tab-home/steps/workout/habits/body) navigate. Settings theme-blue and settings-home-appearance toggle both tap without crash, and back-navigation returns to home. No red-screen. No new native-module-related errors. Only pre-existing RN-Web deprecation warnings (shadow*, TouchableMixin, onResponder*, collapsable bool) observed in console — not regressions from this change.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_2.json"],
+  "action_items": [
+    "No action required from this regression. All JS-side changes (./index.js entry, StepTrackingBridge in _layout, rewritten permissions.tsx, updateStepsWidget effect in home.tsx) are confirmed safe no-ops on web. Native widget + foreground-service step tracking must be validated on an EAS/APK build (out of scope for web preview)."
+  ],
+  "critical_code_review_comments": [
+    "Guarded native requires (Platform.OS==='android' + try/catch + lazy require) in index.js, permissions.tsx, use-step-tracking.ts and widget-data.tsx are implemented correctly and confirmed to keep web/iOS bundles clean.",
+    "Pre-existing RN-Web console warnings (shadow*, TouchableMixin deprecation, onResponder* handlers on non-View DOM, collapsable prop) are not introduced by this change but could be cleaned up in a future pass."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100% (7/7 flows)"},
+  "seed_data_creation": "None. localStorage was cleared to simulate first-launch.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Native Android widget (react-native-android-widget) and expo-android-pedometer background tracking are NOT testable in web preview or Expo Go — they require a native EAS/APK build. This iteration only regression-checked the JS-side changes on web. Fresh-install flow expects language-screen first (localStorage must be cleared). All native calls are correctly lazy-required and guarded, so the web bundle remains clean.",
+  "rca_of_issue": "N/A — regression check passed."
+}

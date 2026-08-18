@@ -16,6 +16,7 @@ const en: Dict = {
   // common
   next: 'Next', skip: 'Skip', getStarted: 'Get Started', continue: 'Continue', save: 'Save', cancel: 'Cancel', reset: 'Reset', done: 'Done', saved: 'Saved',
   allow: 'Allow', granted: 'Granted', deleteAll: 'Delete All',
+  openSettings: 'Open Settings', permBlockedHint: 'Enable this in system Settings to continue',
   // onboarding
   onb1Title: 'Welcome to Your Daily Fitness Journey', onb1Sub: 'Count your steps every day and stay active.',
   onb2Title: 'Burn Calories, Build Habits', onb2Sub: 'Track calories, water, and sleep in a single premium dashboard.',

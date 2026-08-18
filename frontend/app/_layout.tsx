@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useIconFonts } from '@/src/hooks/use-icon-fonts';
+import { useStepTracking } from '@/src/hooks/use-step-tracking';
 import { ThemeProvider, useTheme } from '@/src/theme';
 import { StoreProvider } from '@/src/store';
 import { I18nProvider } from '@/src/i18n';
@@ -13,6 +14,11 @@ import { initAdSession } from '@/src/ads/manager';
 
 LogBox.ignoreAllLogs(true);
 SplashScreen.preventAutoHideAsync();
+
+function StepTrackingBridge() {
+  useStepTracking();
+  return null;
+}
 
 function ThemedShell() {
   const { theme } = useTheme();
@@ -41,6 +47,7 @@ export default function RootLayout() {
         <ThemeProvider>
           <I18nProvider>
             <StoreProvider>
+              <StepTrackingBridge />
               <ThemedShell />
             </StoreProvider>
           </I18nProvider>

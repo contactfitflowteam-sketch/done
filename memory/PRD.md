@@ -1,25 +1,28 @@
-# FitFlow – Home Screen Redesign
+# FitFlow – PRD & Change Log
 
-## What Changed
-- Redesigned `/app/frontend/app/(tabs)/home.tsx` from a dark glassmorphism layout to a premium light-card-on-dark-bg design matching the provided reference image #2.
-- Redesigned `/app/frontend/app/(tabs)/_layout.tsx` bottom tab bar into a rounded white pill with an orange "active tab" glow (label only on the active tab).
+## Original ask (imported APK source)
+Redesign Home screen + add features, without breaking existing FitFlow functionality.
 
-## Kept 100% Intact
-- All existing screens: onboarding, permissions, language, settings, steps, workout, habits, body, detail screens.
-- Store / tracking logic (`src/store`), step counter (Pedometer), water/sleep/workout tracking, habits, goals.
-- Ads (`AdBanner`, `NativeAdCard`, `initAdSession`, `maybeShowInterstitial`).
-- Themes system (`src/theme`), i18n, navigation, permissions, `app.json` config (FitFlow name, motion permissions, etc.).
-- Data flow is real: ring, weekly chart, hydration, sleep, workout, steps all bind to `useStore()`.
+## Architecture
+- Expo SDK 54, expo-router, React Native. Client-only (AsyncStorage store in src/store). FastAPI/Mongo backend present but unused by these features.
 
-## New Home Screen Sections
-1. Header – circle avatar, "Hi, Guest 👋 / Welcome back to FitFlow", dark **Day Streak** chip, notification bell (with dot), settings gear.
-2. Main Step Ring Card (light off-white, orange glow) – Daily Goal label, editable goal, big ring with white track + orange progress gradient, centered `steps` count, shoe icon, orange "% Complete" pill, "Edit Goal" pill.
-3. Four stat cards in ONE horizontal row – Calories Burned, Distance Walked, Hydration Tracker, Sleep Tracker (equal widths, orange wave decoration on stat cards without live progress, orange progress bar on the ones with).
-4. Weekly Progress card – line chart with two series (This Week orange / Last Week grey), Mon–Sun labels, Y-axis 0/5K/10K/15K, "Weekly Avg" + % change vs last week, "Best Day" chip. Chart auto-updates from real step history.
-5. Daily Goals card – 4 mini cards in one row (Water, Sleep, Workout, Steps) each with icon, label, `X / Y`, and orange progress bar. All live.
-6. Ads and "Reset Today's Data" preserved below.
+## Implemented
+- Home screen premium redesign (dark/light card styles), theme-aware accents, animated step ring, streak glow, live "+500 Steps" demo FAB. (dates: this session series)
+- Settings "Home Card Style" Dark/Light toggle; theme color now reflects on Home.
+- App icon confirmed blue; Android adaptive-icon backgroundColor set to #2E4BA0.
+- **Android Home-Screen Widget** (react-native-android-widget):
+  - Widget name `StepsWidget`, shows steps / goal / % + progress bar, tap opens app.
+  - Files: src/widgets/StepsWidget.tsx, src/widgets/widget-data.tsx, src/widgets/widget-task-handler.tsx, index.js (custom entry registering task handler), app.json plugin config, assets/images/widget-preview.png.
+- **Background Step Tracking** (expo-android-pedometer):
+  - Native foreground service + hardware TYPE_STEP_COUNTER; continues minimized/locked/terminated; boot receiver handles reboots.
+  - Files: src/hooks/use-step-tracking.ts (mounted via StepTrackingBridge in app/_layout.tsx), reconcile on launch + AppState active, feeds store + widget.
+  - Permissions rewritten (app/permissions.tsx): activity + notification with granted/denied/blocked + Open Settings; starts foreground service on grant.
+  - home.tsx foreground expo-sensors subscription now skipped on Android (avoids double counting).
 
-## Notes
-- No web-only libs, uses `react-native-svg` for ring + charts.
-- All interactive elements carry `testID`s (`home-screen`, `home-ring-card`, `home-edit-goal`, `stat-calories/distance/hydration/sleep`, `home-weekly-card`, `home-daily-goals-card`, `goal-water/sleep/workout/step`, `home-view-all`, `home-reset-button`, `home-streak-card`, `home-notifications-icon`, `home-settings-icon`, `tab-home/steps/workout/habits/body`).
-- To generate the new APK, use the **Publish** button (top-right of Emergent).
+## Native build required
+Widget + background service ONLY work in a real EAS/APK build (not web preview / Expo Go). Verified in preview: no regressions (iteration_2.json).
+
+## Backlog / not done
+- Real AdMob integration (currently stubs in src/ads).
+- Functional notifications/reminders (toggles are still no-ops).
+- Health Connect sync (optional).

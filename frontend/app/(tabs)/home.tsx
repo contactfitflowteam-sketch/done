@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Pressable, Animated, Easing } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Pressable, Animated, Easing, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -11,6 +11,7 @@ import { useStore, last7Days } from '@/src/store';
 import { useI18n } from '@/src/i18n';
 import { Sheet, PillButton, AdBanner, NativeAdCard } from '@/src/components/ui';
 import { trackInteraction, maybeShowInterstitial } from '@/src/ads/manager';
+import { updateStepsWidget } from '@/src/widgets/widget-data';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -250,8 +251,11 @@ export default function Home() {
     router.push(route as any);
   };
 
-  // Real pedometer subscription (unchanged tracking logic)
+  // Foreground pedometer subscription.
+  // On Android this is handled globally by the native background step service
+  // (useStepTracking in _layout) — skip here to avoid double counting.
   useEffect(() => {
+    if (Platform.OS === 'android') return;
     let sub: any;
     let baseline = 0;
     const base0 = t0.steps;
@@ -292,6 +296,12 @@ export default function Home() {
 
   const stepGoal = state.settings.stepGoal;
   const stepPct = Math.min(1, t0.steps / Math.max(1, stepGoal));
+
+  // Keep the Android home-screen widget in sync with any in-app step / goal change.
+  useEffect(() => {
+    updateStepsWidget(t0.steps, stepGoal);
+  }, [t0.steps, stepGoal]);
+
   const glassSize = state.settings.glassSizeMl || 250;
   const waterGlassesGoal = Math.max(1, Math.round(state.settings.waterGoalMl / glassSize));
   const waterGlasses = Math.round(t0.water / glassSize);
