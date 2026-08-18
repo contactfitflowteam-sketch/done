@@ -19,7 +19,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#FF7A00"
+        "backgroundColor": "#2E4BA0"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.fitflow.app",
