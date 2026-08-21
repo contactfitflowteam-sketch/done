@@ -1,13 +1,13 @@
 name: Build Android APK
 
 on:
-  workflow_dispatch:      # Manual run from Actions tab
+  workflow_dispatch:
   push:
-    branches: [ main ]    # Auto-build on every push to main
+    branches: [ main ]
 
 jobs:
   build-apk:
-    name: Build Debug APK
+    name: Build Release APK
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
@@ -36,7 +36,7 @@ jobs:
         working-directory: ./frontend
         run: yarn install
 
-      - name: Expo prebuild (generate android/ folder)
+      - name: Expo prebuild (generate android folder)
         working-directory: ./frontend
         run: npx expo prebuild --platform android --clean --no-install
 
@@ -44,13 +44,13 @@ jobs:
         working-directory: ./frontend/android
         run: chmod +x gradlew
 
-      - name: Build Debug APK
+      - name: Build Release APK
         working-directory: ./frontend/android
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleRelease --no-daemon
 
-      - name: Upload APK artifact
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: FitFlow-debug-apk
-          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+          name: FitFlow-release-apk
+          path: frontend/android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
