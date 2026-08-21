@@ -15,12 +15,24 @@ export default function LanguageScreen() {
   const { state, saveSettings } = useStore();
   const router = useRouter();
   const [sel, setSel] = useState<Lang>(lang);
-  const fromSettings = state.settings.langSelected;
 
-  const confirm = () => {
-    setLang(sel);
-    if (!fromSettings) { saveSettings({ langSelected: true }); router.replace('/onboarding'); }
-    else router.back();
+  const confirm = async () => {
+    try {
+      if (setLang) await setLang(sel);
+      if (saveSettings) await saveSettings({ langSelected: true });
+
+      // Flow check: user onboarded hai ya direct home bhejna hai
+      if (!state.settings?.onboarded) {
+        router.replace('/onboarding');
+      } else if (!state.settings?.permsRequested) {
+        router.replace('/permissions');
+      } else {
+        router.replace('/(tabs)/home');
+      }
+    } catch (e) {
+      console.error('Error saving language settings:', e);
+      router.replace('/onboarding');
+    }
   };
 
   return (
@@ -36,7 +48,19 @@ export default function LanguageScreen() {
           {LANGUAGES.map((l) => {
             const on = l.code === sel;
             return (
-              <Pressable key={l.code} onPress={() => setSel(l.code)} testID={`lang-${l.code}`} style={[styles.item, { borderColor: on ? theme.primary : theme.cardBorder, backgroundColor: on ? theme.primary + '18' : theme.bgElev, shadowColor: on ? theme.glow : 'transparent' }]}>
+              <Pressable
+                key={l.code}
+                onPress={() => setSel(l.code)}
+                testID={`lang-${l.code}`}
+                style={[
+                  styles.item,
+                  {
+                    borderColor: on ? theme.primary : theme.cardBorder,
+                    backgroundColor: on ? theme.primary + '18' : theme.bgElev,
+                    shadowColor: on ? theme.glow : 'transparent'
+                  }
+                ]}
+              >
                 <Text style={{ fontSize: 26 }}>{l.flag}</Text>
                 <View style={{ flex: 1, marginLeft: 14 }}>
                   <Text style={{ color: theme.text, fontWeight: '800', fontSize: 16 }}>{l.native}</Text>
