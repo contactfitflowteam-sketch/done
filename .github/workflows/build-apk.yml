@@ -19,8 +19,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
-          cache-dependency-path: frontend/yarn.lock
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -39,7 +37,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./frontend
-        run: yarn install --immutable
+        run: yarn install
 
       - name: Expo prebuild (generate android folder)
         working-directory: ./frontend
