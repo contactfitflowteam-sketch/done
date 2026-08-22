@@ -15,13 +15,26 @@ export default function LanguageScreen() {
   const { state, saveSettings } = useStore();
   const router = useRouter();
   const [sel, setSel] = useState<Lang>(lang);
+  const [submitting, setSubmitting] = useState(false);
 
   const confirm = async () => {
-    try {
-      if (setLang) await setLang(sel);
-      if (saveSettings) await saveSettings({ langSelected: true });
+    if (submitting) return;
+    setSubmitting(true);
 
-      // Flow check: user onboarded hai ya direct home bhejna hai
+    try {
+      if (setLang) {
+        await setLang(sel);
+      }
+
+      if (saveSettings) {
+        await saveSettings({
+          langSelected: true,
+          // Language choose hote hi state sync ho jayegi
+          onboarded: state.settings?.onboarded ?? false,
+          permsRequested: state.settings?.permsRequested ?? false,
+        });
+      }
+
       if (!state.settings?.onboarded) {
         router.replace('/onboarding');
       } else if (!state.settings?.permsRequested) {
@@ -32,6 +45,8 @@ export default function LanguageScreen() {
     } catch (e) {
       console.error('Error saving language settings:', e);
       router.replace('/onboarding');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -57,8 +72,8 @@ export default function LanguageScreen() {
                   {
                     borderColor: on ? theme.primary : theme.cardBorder,
                     backgroundColor: on ? theme.primary + '18' : theme.bgElev,
-                    shadowColor: on ? theme.glow : 'transparent'
-                  }
+                    shadowColor: on ? theme.glow : 'transparent',
+                  },
                 ]}
               >
                 <Text style={{ fontSize: 26 }}>{l.flag}</Text>
@@ -74,7 +89,12 @@ export default function LanguageScreen() {
           })}
         </ScrollView>
 
-        <PillButton label={t('continue')} onPress={confirm} testID="lang-continue" style={{ marginTop: 16 }} />
+        <PillButton
+          label={submitting ? '...' : t('continue')}
+          onPress={confirm}
+          testID="lang-continue"
+          style={{ marginTop: 16 }}
+        />
       </View>
     </SafeAreaView>
   );
