@@ -82,17 +82,11 @@ jobs:
             -Pandroid.injected.signing.key.alias=fitflowkey \
             -Pandroid.injected.signing.key.password=fitflowpass
 
-      - name: Locate and copy generated APK
+      - name: Find and copy APK
         run: |
           mkdir -p out
-          APK_FILE=$(find frontend/android/app/build/outputs/apk -name "*.apk" | head -n 1)
-          if [ -n "$APK_FILE" ]; then
-            echo "Found APK at: $APK_FILE"
-            cp "$APK_FILE" out/FitFlow-release.apk
-          else
-            echo "No APK found!"
-            exit 1
-          fi
+          find frontend/android/app/build/outputs/apk -type f -name "*.apk" -exec cp {} out/FitFlow-release.apk \;
+          ls -la out/
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
