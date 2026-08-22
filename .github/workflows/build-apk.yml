@@ -85,7 +85,8 @@ jobs:
           EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID: ${{ env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID }}
           EXPO_PUBLIC_ADMOB_NATIVE_ID: ${{ env.EXPO_PUBLIC_ADMOB_NATIVE_ID }}
         run: |
-          ./gradlew assembleRelease --no-daemon --parallel --max-workers=2 -Dorg.gradle.jvmargs="-Xmx4096m -XX:+HeapDumpOnOutOfMemoryError" \
+          ./gradlew assembleRelease --no-daemon --parallel --max-workers=2 \
+            -Dorg.gradle.jvmargs="-Xmx4096m -XX:+HeapDumpOnOutOfMemoryError" \
             -Pandroid.injected.signing.store.file=${{ github.workspace }}/release.keystore \
             -Pandroid.injected.signing.store.password=fitflowpass \
             -Pandroid.injected.signing.key.alias=fitflowkey \
