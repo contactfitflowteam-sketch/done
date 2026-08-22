@@ -1,25 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { Platform, AppState } from 'react-native';
+import { Pedometer } from 'expo-sensors';
 
 import { useStore } from '@/src/store';
 import { updateStepsWidget } from '@/src/widgets/widget-data';
 
-/**
- * Android real background step tracking bridge.
- *
- * - Uses `expo-android-pedometer` (native foreground service + hardware
- *   TYPE_STEP_COUNTER sensor) which keeps counting while the app is minimized,
- *   the screen is locked, or the app is terminated, and survives reboots via
- *   the module's BOOT_COMPLETED receiver.
- * - On launch and whenever the app returns to foreground it RECONCILES the
- *   device's true daily total via `getStepsCountAsync()` so no steps are lost
- *   while the app was closed (also avoids double counting — native total is the
- *   single source of truth on Android).
- * - Mirrors every change into the FitFlow store and the home-screen widget.
- *
- * On web / iOS this is a safe no-op (the module + widget are Android-only), so
- * all existing behaviour (incl. the manual demo controls) is preserved.
- */
 export function useStepTracking() {
   const { setSteps, state } = useStore();
   const goalRef = useRef(state.settings.stepGoal);
@@ -30,8 +15,9 @@ export function useStepTracking() {
   useEffect(() => {
     if (Platform.OS !== 'android') return;
 
-    let unsubscribe: (() => void) | undefined;
     let mounted = true;
+    let customUnsub: (() => void) | undefined;
+    let expoSensorSub: { remove: () => void } | undefined;
 
     const AndroidPedometer = (() => {
       try {
@@ -40,25 +26,49 @@ export function useStepTracking() {
         return null;
       }
     })();
-    if (!AndroidPedometer) return;
 
-    const sync = async () => {
-      try {
-        const steps = await AndroidPedometer.getStepsCountAsync();
-        if (mounted && typeof steps === 'number' && !Number.isNaN(steps)) {
-          setSteps(steps);
-          updateStepsWidget(steps, goalRef.current);
-        }
-      } catch {}
+    const syncNativeSteps = async () => {
+      if (AndroidPedometer) {
+        try {
+          const steps = await AndroidPedometer.getStepsCountAsync();
+          if (mounted && typeof steps === 'number' && !Number.isNaN(steps) && steps > 0) {
+            setSteps(steps);
+            updateStepsWidget(steps, goalRef.current);
+            return true;
+          }
+        } catch {}
+      }
+      return false;
     };
 
     (async () => {
+      // 1. Check & Request Sensor Permission
       try {
-        await AndroidPedometer.initialize();
+        const isAvailable = await Pedometer.isAvailableAsync();
+        if (isAvailable) {
+          const perm = await Pedometer.requestPermissionsAsync();
+          if (perm.granted) {
+            // Live Step Counter listener (Phone move hone par real-time update)
+            expoSensorSub = Pedometer.watchStepCount((result) => {
+              if (!mounted) return;
+              if (result && typeof result.steps === 'number') {
+                setSteps((prev) => {
+                  const updated = (typeof prev === 'number' ? prev : 0) + 1;
+                  updateStepsWidget(updated, goalRef.current);
+                  return updated;
+                });
+              }
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('Expo pedometer init err:', e);
+      }
 
-        // Only start the foreground service if the user already granted the
-        // activity permission (requested on the permissions screen).
+      // 2. Setup Background Hardware Sensor Service
+      if (AndroidPedometer) {
         try {
+          await AndroidPedometer.initialize();
           const perm = await AndroidPedometer.getActivityPermissionStatus();
           if (perm?.granted) {
             await AndroidPedometer.setupBackgroundUpdates({
@@ -68,29 +78,31 @@ export function useStepTracking() {
               iconResourceName: 'ic_launcher',
             });
           }
+
+          await syncNativeSteps();
+
+          customUnsub = AndroidPedometer.subscribeToChange((event: { steps: number }) => {
+            if (!mounted) return;
+            if (typeof event?.steps === 'number' && !Number.isNaN(event.steps)) {
+              setSteps(event.steps);
+              updateStepsWidget(event.steps, goalRef.current);
+            }
+          });
         } catch {}
-
-        await sync();
-
-        unsubscribe = AndroidPedometer.subscribeToChange((event: { steps: number }) => {
-          if (!mounted) return;
-          if (typeof event?.steps === 'number' && !Number.isNaN(event.steps)) {
-            setSteps(event.steps);
-            updateStepsWidget(event.steps, goalRef.current);
-          }
-        });
-      } catch {}
+      }
     })();
 
     const appStateSub = AppState.addEventListener('change', (next) => {
-      if (next === 'active') sync();
+      if (next === 'active') {
+        syncNativeSteps();
+      }
     });
 
     return () => {
       mounted = false;
-      try { unsubscribe && unsubscribe(); } catch {}
+      try { customUnsub && customUnsub(); } catch {}
+      try { expoSensorSub && expoSensorSub.remove(); } catch {}
       appStateSub.remove();
     };
-    // Re-run when permission is granted so the service can start immediately.
   }, [permsRequested, setSteps]);
 }
