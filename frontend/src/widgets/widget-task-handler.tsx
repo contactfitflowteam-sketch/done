@@ -8,11 +8,6 @@ const nameToWidget = {
   StepsWidget,
 };
 
-/**
- * Headless handler invoked by Android when a widget is added, updated
- * (periodic), resized or clicked. It reads the last persisted snapshot and
- * renders the widget. Runs in a separate JS context from the app UI.
- */
 export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
   const widgetName = props.widgetInfo.widgetName as keyof typeof nameToWidget;
   const Widget = nameToWidget[widgetName] || StepsWidget;
@@ -23,7 +18,7 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
     case 'WIDGET_RESIZED':
     case 'WIDGET_CLICK': {
       const data = await loadWidgetData();
-      props.renderWidget(<Widget steps={data.steps} goal={data.goal} />);
+      props.renderWidget(<Widget steps={data.steps ?? 0} goal={data.goal ?? 15000} />);
       break;
     }
     case 'WIDGET_DELETED':
