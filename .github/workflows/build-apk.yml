@@ -54,11 +54,6 @@ jobs:
         working-directory: ./frontend
         run: npx expo prebuild --platform android --clean --no-install
 
-      - name: Setup Gradle Properties
-        working-directory: ./frontend/android
-        run: |
-          printf "\nandroid.useAndroidX=true\nandroid.enableJetifier=true\norg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m\n" >> gradle.properties
-
       - name: Generate release signing keystore
         run: |
           keytool -genkeypair -v \
@@ -82,6 +77,9 @@ jobs:
           EXPO_PUBLIC_ADMOB_NATIVE_ID: ${{ env.EXPO_PUBLIC_ADMOB_NATIVE_ID }}
         run: |
           ./gradlew assembleRelease --no-daemon \
+            -Dorg.gradle.jvmargs="-Xmx4096m -XX:MaxMetaspaceSize=1024m" \
+            -Pandroid.useAndroidX=true \
+            -Pandroid.enableJetifier=true \
             -Pandroid.injected.signing.store.file=${{ github.workspace }}/release.keystore \
             -Pandroid.injected.signing.store.password=fitflowpass \
             -Pandroid.injected.signing.key.alias=fitflowkey \
