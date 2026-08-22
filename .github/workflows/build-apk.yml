@@ -69,7 +69,6 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build signed Release APK
-        id: gradle_build
         working-directory: ./frontend/android
         env:
           EXPO_PUBLIC_AD_MODE: ${{ env.EXPO_PUBLIC_AD_MODE }}
@@ -81,21 +80,19 @@ jobs:
             -Pandroid.injected.signing.store.file=${{ github.workspace }}/release.keystore \
             -Pandroid.injected.signing.store.password=fitflowpass \
             -Pandroid.injected.signing.key.alias=fitflowkey \
-            -Pandroid.injected.signing.key.password=fitflowpass 2>&1 | tee build.log
+            -Pandroid.injected.signing.key.password=fitflowpass
 
-      - name: Show exact error if failed
-        if: failure()
-        working-directory: ./frontend/android
-        run: |
-          echo "==================== EXACT ERROR ROOT CAUSE ===================="
-          grep -A 25 -i "what went wrong" build.log || grep -A 20 -i "Caused by:" build.log || tail -n 60 build.log
-          echo "================================================================"
-
-      - name: Rename APK
+      - name: Locate and copy generated APK
         run: |
           mkdir -p out
-          cp frontend/android/app/build/outputs/apk/release/app-release.apk \
-             out/FitFlow-release.apk
+          APK_FILE=$(find frontend/android/app/build/outputs/apk -name "*.apk" | head -n 1)
+          if [ -n "$APK_FILE" ]; then
+            echo "Found APK at: $APK_FILE"
+            cp "$APK_FILE" out/FitFlow-release.apk
+          else
+            echo "No APK found!"
+            exit 1
+          fi
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
