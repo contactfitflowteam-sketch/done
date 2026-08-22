@@ -24,11 +24,18 @@ function ThemedShell({ fontsLoaded }: { fontsLoaded: boolean }) {
   const { state } = useStore();
 
   useEffect(() => {
-    // Fonts load hone aur Store ready hone ke baad Splash Screen hide hogi
+    // 1.5s Safety fallback: Splash screen kabhi bhi app ko freeze karke nahi rakhegi
+    const timer = setTimeout(() => {
+      SplashScreen.hideAsync().catch(() => {});
+    }, 1500);
+
     const isReady = fontsLoaded && (!state.isLoading && state.isHydrated !== false);
     if (isReady) {
       SplashScreen.hideAsync().catch(() => {});
+      clearTimeout(timer);
     }
+
+    return () => clearTimeout(timer);
   }, [fontsLoaded, state.isLoading, state.isHydrated]);
 
   return (
@@ -48,7 +55,6 @@ function ThemedShell({ fontsLoaded }: { fontsLoaded: boolean }) {
 export default function RootLayout() {
   const [loaded, error] = useIconFonts();
 
-  // Initialize Google Mobile Ads once on Android
   useEffect(() => {
     if (Platform.OS !== 'android') return;
     let mounted = true;
