@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android Release APK
 
 on:
   workflow_dispatch:
@@ -7,12 +7,12 @@ on:
 
 jobs:
   build-apk:
-    name: Build Release APK
+    name: Build Release APK (signed)
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js 20
@@ -35,25 +35,71 @@ jobs:
       - name: Enable Corepack (Yarn)
         run: corepack enable
 
-      - name: Install dependencies
+      - name: Load AdMob env vars from admob.env
+        run: |
+          if [ -f admob.env ]; then
+            while IFS= read -r line || [ -n "$line" ]; do
+              case "$line" in
+                ''|\#*) ;;
+                *) echo "$line" >> $GITHUB_ENV ;;
+              esac
+            done < admob.env
+            echo "Loaded AdMob env vars from admob.env"
+          else
+            echo "admob.env not found, using default env"
+          fi
+
+      - name: Install frontend dependencies
         working-directory: ./frontend
         run: yarn install
 
-      - name: Expo prebuild (generate android folder)
+      - name: Expo prebuild (Android)
         working-directory: ./frontend
+        env:
+          ADMOB_ANDROID_APP_ID: ${{ env.ADMOB_ANDROID_APP_ID }}
+          EXPO_PUBLIC_AD_MODE: ${{ env.EXPO_PUBLIC_AD_MODE }}
+          EXPO_PUBLIC_ADMOB_BANNER_ID: ${{ env.EXPO_PUBLIC_ADMOB_BANNER_ID }}
+          EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID: ${{ env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID }}
+          EXPO_PUBLIC_ADMOB_NATIVE_ID: ${{ env.EXPO_PUBLIC_ADMOB_NATIVE_ID }}
         run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Generate release signing keystore
+        run: |
+          keytool -genkeypair -v \
+            -keystore ${{ github.workspace }}/release.keystore \
+            -storepass fitflowpass \
+            -alias fitflowkey \
+            -keypass fitflowpass \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=FitFlow, OU=App, O=FitFlow, L=NA, S=NA, C=IN"
 
       - name: Make gradlew executable
         working-directory: ./frontend/android
         run: chmod +x gradlew
 
-      - name: Build Release APK
+      - name: Build signed Release APK
         working-directory: ./frontend/android
-        run: ./gradlew assembleRelease --no-daemon --parallel --max-workers=2 -Dorg.gradle.jvmargs="-Xmx4096m -XX:+HeapDumpOnOutOfMemoryError"
+        env:
+          EXPO_PUBLIC_AD_MODE: ${{ env.EXPO_PUBLIC_AD_MODE }}
+          EXPO_PUBLIC_ADMOB_BANNER_ID: ${{ env.EXPO_PUBLIC_ADMOB_BANNER_ID }}
+          EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID: ${{ env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID }}
+          EXPO_PUBLIC_ADMOB_NATIVE_ID: ${{ env.EXPO_PUBLIC_ADMOB_NATIVE_ID }}
+        run: |
+          ./gradlew assembleRelease --no-daemon --parallel --max-workers=2 -Dorg.gradle.jvmargs="-Xmx4096m -XX:+HeapDumpOnOutOfMemoryError" \
+            -Pandroid.injected.signing.store.file=${{ github.workspace }}/release.keystore \
+            -Pandroid.injected.signing.store.password=fitflowpass \
+            -Pandroid.injected.signing.key.alias=fitflowkey \
+            -Pandroid.injected.signing.key.password=fitflowpass
 
-      - name: Upload Release APK
+      - name: Rename APK
+        run: |
+          mkdir -p out
+          cp frontend/android/app/build/outputs/apk/release/app-release.apk \
+             out/FitFlow-release.apk
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: FitFlow-release-apk
-          path: frontend/android/app/build/outputs/apk/release/app-release.apk
+          path: out/FitFlow-release.apk
           retention-days: 30
