@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "fitflow",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fitflow.app",
@@ -71,7 +71,15 @@
           ]
         }
       ],
-      "expo-android-pedometer"
+      "expo-android-pedometer",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511",
+          "userTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
