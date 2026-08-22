@@ -8,6 +8,8 @@ import { useStore } from '@/src/store';
 import { useI18n, LANGUAGES } from '@/src/i18n';
 import { ScreenHeader, GlassCard, Row, Sheet, PillButton } from '@/src/components/ui';
 import { APP_LINKS } from '@/src/ads/config';
+import { NativeAdSlot } from '@/src/ads/NativeAdSlot';
+import { BannerAdSlot } from '@/src/ads/BannerAdSlot';
 
 export default function Settings() {
   const { theme, themeName, setTheme } = useTheme();
@@ -58,7 +60,7 @@ export default function Settings() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']} testID="settings-screen">
       <ScreenHeader title={t('settings')} onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}>
         <Section title={t('general')}>
           <Row icon="language" label={t('changeLanguage')} value={`${currentLang?.flag} ${currentLang?.native}`} onPress={() => router.push('/language')} testID="settings-language" />
         </Section>
@@ -70,6 +72,11 @@ export default function Settings() {
           <Row icon="scale" label={t('weight')} value={`${state.profile.weightKg} ${s.weightUnit}`} onPress={() => router.push('/(tabs)/body')} testID="settings-weight" />
           <Row icon="resize" label={t('height')} value={`${state.profile.heightCm} ${s.heightUnit}`} onPress={() => router.push('/(tabs)/body')} testID="settings-height" />
         </Section>
+
+        {/* NATIVE AD SLOT IN SETTINGS */}
+        <View style={{ marginTop: 16, marginHorizontal: -16 }}>
+          <NativeAdSlot refreshMs={300000} />
+        </View>
 
         <Section title={t('activity')}>
           <Row icon="walk" label={t('stepGoal')} value={s.stepGoal.toLocaleString()} onPress={() => router.push('/settings/step-goal')} testID="settings-stepgoal" />
@@ -140,6 +147,11 @@ export default function Settings() {
         </Section>
       </ScrollView>
 
+      {/* FIXED BOTTOM BANNER AD */}
+      <View style={styles.bannerWrap}>
+        <BannerAdSlot />
+      </View>
+
       <Sheet visible={confirmToday} onClose={() => setConfirmToday(false)} title={t('resetTitle')}>
         <Text style={{ color: theme.textMuted, marginBottom: 20 }}>{t('resetBody')}</Text>
         <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -163,4 +175,12 @@ const styles = StyleSheet.create({
   swatch: { width: 44, height: 44, borderRadius: 22, borderWidth: 3, shadowOpacity: 0.6, shadowRadius: 12, elevation: 6 },
   tog: { width: 44, height: 26, borderRadius: 999, padding: 3, justifyContent: 'center' },
   togBall: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#FFFFFF' },
+  bannerWrap: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
 });
