@@ -1,20 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useStore } from '@/src/store';
 
 export default function Index() {
   const { state } = useStore();
+  const [forcedReady, setForcedReady] = useState(false);
 
-  // Agar store abhi hydrate / load ho raha ho toh loader dikhayega
-  if (state.isLoading || state.isHydrated === false) {
+  // Maximum 1.2s timeout taaki store ke freeze hone par app kabhi stuck na ho
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setForcedReady(true);
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const isHydrated = (state && !state.isLoading && state.isHydrated !== false) || forcedReady;
+
+  if (!isHydrated) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#007AFF" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#050505' }}>
+        <ActivityIndicator size="large" color="#FF7A00" />
       </View>
     );
   }
 
+  // Routing checks
   if (!state.settings?.langSelected) {
     return <Redirect href="/language" />;
   }
