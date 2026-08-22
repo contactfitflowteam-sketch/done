@@ -1,8 +1,3 @@
-// Dynamic Expo config: reads AdMob App ID from environment.
-// The base config still lives in app.json. This file only augments the
-// react-native-google-mobile-ads plugin so we can inject the App ID from
-// env vars during prebuild.
-
 const TEST_ANDROID_APP_ID = 'ca-app-pub-3940256099942544~3347511713';
 
 module.exports = ({ config }) => {
