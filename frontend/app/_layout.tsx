@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
-import { LogBox, View, StatusBar } from 'react-native';
+import { LogBox, View, StatusBar, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -10,7 +10,6 @@ import { useStepTracking } from '@/src/hooks/use-step-tracking';
 import { ThemeProvider, useTheme } from '@/src/theme';
 import { StoreProvider, useStore } from '@/src/store';
 import { I18nProvider } from '@/src/i18n';
-import { initAdSession } from '@/src/ads/manager';
 
 LogBox.ignoreAllLogs(true);
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -25,7 +24,7 @@ function ThemedShell({ fontsLoaded }: { fontsLoaded: boolean }) {
   const { state } = useStore();
 
   useEffect(() => {
-    // Fonts load hone ke baad aur Store ready hone ke baad hi Splash Screen hide hogi
+    // Fonts load hone aur Store ready hone ke baad Splash Screen hide hogi
     const isReady = fontsLoaded && (!state.isLoading && state.isHydrated !== false);
     if (isReady) {
       SplashScreen.hideAsync().catch(() => {});
@@ -49,8 +48,29 @@ function ThemedShell({ fontsLoaded }: { fontsLoaded: boolean }) {
 export default function RootLayout() {
   const [loaded, error] = useIconFonts();
 
+  // Initialize Google Mobile Ads once on Android
   useEffect(() => {
-    initAdSession();
+    if (Platform.OS !== 'android') return;
+    let mounted = true;
+    (async () => {
+      try {
+        const mod = await import('react-native-google-mobile-ads');
+        if (!mounted) return;
+        const mobileAds = mod.default;
+        const MaxAdContentRating = mod.MaxAdContentRating;
+        await mobileAds().setRequestConfiguration({
+          maxAdContentRating: MaxAdContentRating.PG,
+          tagForChildDirectedTreatment: false,
+          tagForUnderAgeOfConsent: false,
+        });
+        await mobileAds().initialize();
+      } catch (e) {
+        console.warn('[AdMob] init skipped:', (e as Error)?.message);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (!loaded && !error) return null;
