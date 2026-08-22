@@ -29,6 +29,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Setup Gradle Cache
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Enable Corepack (Yarn)
         run: corepack enable
 
@@ -54,9 +57,7 @@ jobs:
       - name: Setup Gradle Properties
         working-directory: ./frontend/android
         run: |
-          echo "android.useAndroidX=true" >> gradle.properties
-          echo "android.enableJetifier=true" >> gradle.properties
-          echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m" >> gradle.properties
+          printf "\nandroid.useAndroidX=true\nandroid.enableJetifier=true\norg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m\n" >> gradle.properties
 
       - name: Generate release signing keystore
         run: |
