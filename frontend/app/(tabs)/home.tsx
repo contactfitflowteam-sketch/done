@@ -9,13 +9,14 @@ import Svg, { Circle, Defs, LinearGradient, Stop, Path, Line as SvgLine, Text as
 import { useTheme, Palette } from '@/src/theme';
 import { useStore, last7Days } from '@/src/store';
 import { useI18n } from '@/src/i18n';
-import { Sheet, PillButton, AdBanner, NativeAdCard } from '@/src/components/ui';
+import { Sheet, PillButton } from '@/src/components/ui';
 import { trackInteraction, maybeShowInterstitial } from '@/src/ads/manager';
 import { updateStepsWidget } from '@/src/widgets/widget-data';
+import { NativeAdSlot } from '@/src/ads/NativeAdSlot';
+import { BannerAdSlot } from '@/src/ads/BannerAdSlot';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-// Colors object derived from active theme + chosen appearance (dark / light cards)
 type HomeColors = {
   cardBg: string;
   cardBg2: string;
@@ -61,7 +62,6 @@ function buildColors(theme: Palette, appearance: 'dark' | 'light'): HomeColors {
       streakBg: '#151515',
     };
   }
-  // dark (premium black + accent glow)
   return {
     cardBg: '#101010',
     cardBg2: '#0A0A0A',
@@ -83,7 +83,6 @@ function buildColors(theme: Palette, appearance: 'dark' | 'light'): HomeColors {
   };
 }
 
-// -------- Animated Step Ring (accent progress, animates on mount / step change) --------
 function BigStepRing({ steps, goal, c, size = 220 }: { steps: number; goal: number; c: HomeColors; size?: number }) {
   const stroke = 22;
   const r = (size - stroke) / 2;
@@ -98,7 +97,7 @@ function BigStepRing({ steps, goal, c, size = 220 }: { steps: number; goal: numb
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
-  }, [pct]); // eslint-disable-line
+  }, [pct]);
 
   const strokeDashoffset = anim.interpolate({ inputRange: [0, 1], outputRange: [circ, 0] });
 
@@ -111,9 +110,7 @@ function BigStepRing({ steps, goal, c, size = 220 }: { steps: number; goal: numb
             <Stop offset="100%" stopColor={c.accent2} />
           </LinearGradient>
         </Defs>
-        {/* Track */}
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={c.ringTrack} strokeWidth={stroke} fill="none" />
-        {/* Animated progress */}
         <AnimatedCircle
           cx={size / 2}
           cy={size / 2}
@@ -251,9 +248,6 @@ export default function Home() {
     router.push(route as any);
   };
 
-  // Foreground pedometer subscription.
-  // On Android this is handled globally by the native background step service
-  // (useStepTracking in _layout) — skip here to avoid double counting.
   useEffect(() => {
     if (Platform.OS === 'android') return;
     let sub: any;
@@ -271,7 +265,7 @@ export default function Home() {
       } catch {}
     })();
     return () => { sub && sub.remove && sub.remove(); };
-  }, []); // eslint-disable-line
+  }, []);
 
   const week = last7Days(state.days);
   const dayIdx = (dateStr: string) => (new Date(dateStr).getDay() + 6) % 7;
@@ -297,7 +291,6 @@ export default function Home() {
   const stepGoal = state.settings.stepGoal;
   const stepPct = Math.min(1, t0.steps / Math.max(1, stepGoal));
 
-  // Keep the Android home-screen widget in sync with any in-app step / goal change.
   useEffect(() => {
     updateStepsWidget(t0.steps, stepGoal);
   }, [t0.steps, stepGoal]);
@@ -319,7 +312,6 @@ export default function Home() {
   const workoutGoalMin = 60;
   const workoutPct = Math.min(1, workoutMinToday / workoutGoalMin);
 
-  // ---- Streak Glow: pulse when milestone reached (>=7 days) ----
   const streakGlow = streak >= 7;
   const pulse = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -332,11 +324,10 @@ export default function Home() {
     );
     loop.start();
     return () => loop.stop();
-  }, [streakGlow]); // eslint-disable-line
+  }, [streakGlow]);
   const glowRadius = pulse.interpolate({ inputRange: [0, 1], outputRange: [4, 16] });
   const glowOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.85] });
 
-  // ---- Live Steps Demo: add test steps ----
   const addTestSteps = () => {
     trackInteraction();
     setSteps(t0.steps + 500);
@@ -403,7 +394,7 @@ export default function Home() {
           </View>
         </View>
 
-        {/* FOUR STAT CARDS in ONE row */}
+        {/* FOUR STAT CARDS */}
         <View style={styles.statsRow} testID="home-stats-row">
           <StatCardLight icon="flame" label="Calories Burned" value={`${t0.caloriesBurned}`} sub="kcal" c={c} testID="stat-calories" onPress={() => openDetail('/detail/calories')} />
           <StatCardLight icon="location" label="Distance Walked" value={t0.distanceKm.toFixed(2)} sub="km" c={c} testID="stat-distance" onPress={() => openDetail('/detail/distance')} />
@@ -466,13 +457,12 @@ export default function Home() {
           </View>
         </View>
 
-        {/* Ads (preserved) */}
-        <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
-          <NativeAdCard testID="home-native-ad" />
+        {/* NATIVE AD */}
+        <View style={{ marginTop: 14 }}>
+          <NativeAdSlot refreshMs={300000} />
         </View>
-        <AdBanner />
 
-        {/* Reset button (preserved) */}
+        {/* Reset button */}
         <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
           <Pressable onPress={() => setConfirmReset(true)} testID="home-reset-button" style={[styles.resetBtn, { borderColor: theme.danger + '55' }]}>
             <Ionicons name="refresh" size={16} color={theme.danger} />
@@ -480,6 +470,11 @@ export default function Home() {
           </Pressable>
         </View>
       </ScrollView>
+
+      {/* BANNER AD (BOTTOM FIXED) */}
+      <View style={styles.bannerWrap}>
+        <BannerAdSlot />
+      </View>
 
       {/* Live Steps Demo floating button */}
       <Pressable
@@ -552,10 +547,19 @@ const styles = StyleSheet.create({
 
   resetBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 999, borderWidth: 1 },
 
+  bannerWrap: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+
   fab: {
     position: 'absolute',
     right: 16,
-    bottom: 96,
+    bottom: 80,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
