@@ -29,9 +29,6 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Setup Gradle Cache
-        uses: gradle/actions/setup-gradle@v3
-
       - name: Enable Corepack (Yarn)
         run: corepack enable
 
@@ -44,32 +41,22 @@ jobs:
                 *) echo "$line" >> $GITHUB_ENV ;;
               esac
             done < admob.env
-            echo "Loaded AdMob env vars from admob.env"
-          else
-            echo "admob.env not found, using default env"
           fi
 
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: yarn install
+        run: yarn install --frozen-lockfile || yarn install
 
       - name: Expo prebuild (Android)
         working-directory: ./frontend
-        env:
-          ADMOB_ANDROID_APP_ID: ${{ env.ADMOB_ANDROID_APP_ID }}
-          EXPO_PUBLIC_AD_MODE: ${{ env.EXPO_PUBLIC_AD_MODE }}
-          EXPO_PUBLIC_ADMOB_BANNER_ID: ${{ env.EXPO_PUBLIC_ADMOB_BANNER_ID }}
-          EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID: ${{ env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID }}
-          EXPO_PUBLIC_ADMOB_NATIVE_ID: ${{ env.EXPO_PUBLIC_ADMOB_NATIVE_ID }}
         run: npx expo prebuild --platform android --clean --no-install
 
-      - name: Fix Kotlin & Gradle compatibility
+      - name: Setup Gradle Properties
         working-directory: ./frontend/android
         run: |
           echo "android.useAndroidX=true" >> gradle.properties
           echo "android.enableJetifier=true" >> gradle.properties
-          echo "kotlin.jvm.target.validation.mode=WARNING" >> gradle.properties
-          echo "org.gradle.jvmargs=-Xmx4096m -XX:+HeapDumpOnOutOfMemoryError" >> gradle.properties
+          echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m" >> gradle.properties
 
       - name: Generate release signing keystore
         run: |
@@ -93,7 +80,7 @@ jobs:
           EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID: ${{ env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID }}
           EXPO_PUBLIC_ADMOB_NATIVE_ID: ${{ env.EXPO_PUBLIC_ADMOB_NATIVE_ID }}
         run: |
-          ./gradlew assembleRelease --no-daemon --stacktrace \
+          ./gradlew assembleRelease --no-daemon \
             -Pandroid.injected.signing.store.file=${{ github.workspace }}/release.keystore \
             -Pandroid.injected.signing.store.password=fitflowpass \
             -Pandroid.injected.signing.key.alias=fitflowkey \
