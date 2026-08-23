@@ -13,42 +13,31 @@ export const LANGUAGES: { code: Lang; label: string; native: string; flag: strin
 type Dict = Record<string, string>;
 
 const en: Dict = {
-  // common
   next: 'Next', skip: 'Skip', getStarted: 'Get Started', continue: 'Continue', save: 'Save', cancel: 'Cancel', reset: 'Reset', done: 'Done', saved: 'Saved',
   allow: 'Allow', granted: 'Granted', deleteAll: 'Delete All',
   openSettings: 'Open Settings', permBlockedHint: 'Enable this in system Settings to continue',
-  // onboarding
   onb1Title: 'Welcome to Your Daily Fitness Journey', onb1Sub: 'Count your steps every day and stay active.',
   onb2Title: 'Burn Calories, Build Habits', onb2Sub: 'Track calories, water, and sleep in a single premium dashboard.',
   onb3Title: 'Keep Your Streak Alive', onb3Sub: 'Complete daily goals and rise up the streaks leaderboard.',
-  // language
   chooseLanguage: 'Choose Your Language', chooseLanguageSub: 'You can change this anytime in Settings.', changeLanguage: 'Change Language',
-  // permissions
   motionTitle: 'Turn Motion Access On', motionSub: 'To count your steps, we need your permission to access motion and fitness activity.',
   physicalActivity: 'Physical Activity', physicalActivitySub: 'Live step count & distance',
   notifications: 'Notifications', notificationsSub: 'Step, water, workout & streak reminders',
-  // tabs
   home: 'Home', steps: 'Steps', workout: 'Workout', habits: 'Habits', body: 'Body',
-  // home
   hi: 'Hi', welcomeBack: 'Welcome back to FitFlow', dailyGoal: 'Daily Goal', editGoal: 'Edit Goal', stepsLabel: 'Steps', complete: 'Complete',
   calories: 'Calories', distance: 'Distance', hydration: 'Hydration', sleep: 'Sleep', lastNight: 'last night',
   weeklyProgress: 'Weekly Progress', avg: 'Avg', dailyGoals: 'Daily Goals', viewAll: 'View All',
   waterGoal: 'Water Goal', sleepGoal: 'Sleep Goal', stepGoal: 'Step Goal', resetToday: "Reset Today's Data",
   resetTitle: "Reset all today's data?", resetBody: 'This will reset steps, calories, distance, water, and daily progress for today.',
-  // steps
   your: 'Your', day: 'Day', week: 'Week', month: 'Month', daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly',
   insights: 'Insights', totalDistance: 'Total Distance', totalCalories: 'Total Calories', bestDay: 'Best Day', activeTime: 'Active Time',
   avgSteps: 'Avg {n} steps', trend: 'Trend', tapPoint: 'Tap a bar to see its value',
-  // workout
   walking: 'Walking', running: 'Running', cycling: 'Cycling', custom: 'Custom', ready: 'Ready', live: 'Live', paused: 'Paused',
   start: 'Start', pause: 'Pause', resume: 'Resume', stop: 'Stop', duration: 'Duration', recentSessions: 'Recent Sessions', noWorkouts: 'No workouts yet. Start your first session above.',
-  // habits
   habitsHint: 'Tap a habit to mark it complete for today.', drinkWater: 'Drink Water', walkGoal: 'Walk Goal', dailyActivity: 'Daily Activity',
   dayStreak: '{n} day streak', startStreak: 'Start a streak today',
-  // body
   bodyMeasurements: 'Body Measurements', gender: 'Gender', male: 'Male', female: 'Female', other: 'Other', birthYear: 'Birth Year',
   weight: 'Weight', height: 'Height', stepLength: 'Step Length', auto: 'auto', manual: 'manual', saveMeasurements: 'Save Measurements',
-  // settings
   settings: 'Settings', general: 'General', personal: 'Personal', activity: 'Activity', appearance: 'Appearance', data: 'Data', about: 'About',
   social: 'Follow Us', app: 'App', theme: 'Theme', profile: 'Profile',
   distanceUnit: 'Distance Unit', calorieSettings: 'Calorie Settings', glassSize: 'Glass Size', waterReminders: 'Water Reminders',
@@ -56,7 +45,6 @@ const en: Dict = {
   resetAllData: 'Reset All Data', exportData: 'Export Data', appVersion: 'App Version', privacyPolicy: 'Privacy Policy', terms: 'Terms', contact: 'Contact',
   instagram: 'Instagram', twitter: 'X (Twitter)', facebook: 'Facebook', rateApp: 'Rate This App', homeWidget: 'Home Screen Widget', enableWidget: 'Enable Widget',
   resetAllTitle: 'Reset ALL data?', resetAllBody: 'This permanently deletes profile, workouts, history and habits. Cannot be undone.',
-  // goals
   dailyStepGoal: 'Daily Step Goal', selectedGoal: 'Selected Goal', stepsPerDay: 'steps / day', saveGoal: 'Save Goal',
   hydrationGoal: 'Hydration Goal', sleepGoalTitle: 'Sleep Goal', perNight: 'per night', logSleep: 'Log Sleep', saveSleep: 'Save Sleep',
   hours: 'Hours', minutes: 'Minutes', ofDailyGoal: 'of daily goal', quickAdd: 'Quick add (ml)', glass: 'Glass', weeklyHistory: 'Weekly History', weeklySleep: 'Weekly Sleep',
@@ -155,7 +143,7 @@ const hi: Dict = {
   weeklyProgress: 'साप्ताहिक प्रगति', avg: 'औसत', dailyGoals: 'दैनिक लक्ष्य', viewAll: 'सभी देखें',
   waterGoal: 'पानी लक्ष्य', sleepGoal: 'नींद लक्ष्य', stepGoal: 'कदम लक्ष्य', resetToday: 'आज का डेटा रीसेट करें',
   resetTitle: 'आज का सारा डेटा रीसेट करें?', resetBody: 'इससे आज के कदम, कैलोरी, दूरी, पानी और प्रगति रीसेट होगी।',
-  your: 'आपके', day: 'दिन', week: 'सप्ताह', month: 'महीना', daily: 'दैनिक', weekly: 'साप्ताहिक', monthly: 'मासिक',
+  your: 'आपके', day: 'दिन', week: 'सप्ताह', month: 'महीना', daily: 'દૈનિક', weekly: 'સાપ્તાહિક', monthly: 'માસિક',
   insights: 'अंतर्दृष्टि', totalDistance: 'कुल दूरी', totalCalories: 'कुल कैलोरी', bestDay: 'सर्वश्रेष्ठ दिन', activeTime: 'सक्रिय समय',
   avgSteps: 'औसत {n} कदम', trend: 'रुझान', tapPoint: 'मान देखने के लिए बार टैप करें',
   walking: 'चलना', running: 'दौड़ना', cycling: 'साइक्लिंग', custom: 'कस्टम', ready: 'तैयार', live: 'लाइव', paused: 'रुका हुआ',
@@ -180,19 +168,47 @@ const hi: Dict = {
 const DICTS: Record<Lang, Dict> = { en, gu, pt, hi };
 const KEY = '@fitflow.lang';
 
-type I18nCtx = { lang: Lang; setLang: (l: Lang) => void; t: (k: keyof typeof en, vars?: Record<string, string | number>) => string; ready: boolean };
+type I18nCtx = { lang: Lang; setLang: (l: Lang) => void; t: (k: keyof typeof en | string, vars?: Record<string, string | number>) => string; ready: boolean };
 const I18nContext = createContext<I18nCtx>({ lang: 'en', setLang: () => {}, t: (k) => String(k), ready: false });
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>('en');
   const [ready, setReady] = useState(false);
-  useEffect(() => { AsyncStorage.getItem(KEY).then((v) => { if (v && v in DICTS) setLangState(v as Lang); setReady(true); }); }, []);
-  const setLang = useCallback((l: Lang) => { setLangState(l); AsyncStorage.setItem(KEY, l); }, []);
-  const t = useCallback((k: keyof typeof en, vars?: Record<string, string | number>) => {
-    let str = DICTS[lang][k] ?? en[k] ?? String(k);
-    if (vars) Object.keys(vars).forEach((vk) => { str = str.replace(`{${vk}}`, String(vars[vk])); });
-    return str;
-  }, [lang]);
+
+  useEffect(() => {
+    AsyncStorage.getItem(KEY)
+      .then((v) => {
+        if (v && v in DICTS) {
+          setLangState(v as Lang);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setReady(true));
+  }, []);
+
+  const setLang = useCallback((l: Lang) => {
+    setLangState(l);
+    AsyncStorage.setItem(KEY, l).catch(() => {});
+  }, []);
+
+  const t = useCallback(
+    (k: keyof typeof en | string, vars?: Record<string, string | number>) => {
+      try {
+        const dict = DICTS[lang] || en;
+        let str = dict[k] || en[k] || String(k);
+        if (vars && typeof str === 'string') {
+          Object.keys(vars).forEach((vk) => {
+            str = str.replace(`{${vk}}`, String(vars[vk]));
+          });
+        }
+        return str;
+      } catch {
+        return String(k);
+      }
+    },
+    [lang]
+  );
+
   const value = useMemo(() => ({ lang, setLang, t, ready }), [lang, setLang, t, ready]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
