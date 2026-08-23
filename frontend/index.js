@@ -1,16 +1,15 @@
 import { registerRootComponent } from 'expo';
 import { ExpoRoot } from 'expo-router';
 import { Platform } from 'react-native';
+import { registerWidgetTaskHandler } from 'react-native-android-widget';
+import { widgetTaskHandler } from './src/widgets/widget-task-handler';
 
+// Android Native Widget Background Binding
 if (Platform.OS === 'android') {
   try {
-    const { registerWidgetTaskHandler } = require('react-native-android-widget');
-    const { widgetTaskHandler } = require('./src/widgets/widget-task-handler');
-    if (typeof registerWidgetTaskHandler === 'function') {
-      registerWidgetTaskHandler(widgetTaskHandler);
-    }
+    registerWidgetTaskHandler(widgetTaskHandler);
   } catch (e) {
-    console.warn('[Widget Task Handler Init Safely Skipped]:', e);
+    console.warn('[Widget] Task handler registration notice:', e);
   }
 }
 
