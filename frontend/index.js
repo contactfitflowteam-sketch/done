@@ -1,5 +1,14 @@
 import 'expo-router/entry';
-import { registerWidgetTaskHandler } from 'react-native-android-widget';
-import { widgetTaskHandler } from './src/widgets/widget-task-handler';
+import { Platform } from 'react-native';
 
-registerWidgetTaskHandler(widgetTaskHandler);
+if (Platform.OS === 'android') {
+  try {
+    const { registerWidgetTaskHandler } = require('react-native-android-widget');
+    const { widgetTaskHandler } = require('./src/widgets/widget-task-handler');
+    if (typeof registerWidgetTaskHandler === 'function' && widgetTaskHandler) {
+      registerWidgetTaskHandler(widgetTaskHandler);
+    }
+  } catch (e) {
+    console.warn('[Widget Task Handler Init Safely Skipped]:', e);
+  }
+}
