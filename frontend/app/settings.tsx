@@ -10,11 +10,12 @@ import { ScreenHeader, GlassCard, Row, Sheet, PillButton } from '@/src/component
 import { APP_LINKS } from '@/src/ads/config';
 import { NativeAdSlot } from '@/src/ads/NativeAdSlot';
 import { BannerAdSlot } from '@/src/ads/BannerAdSlot';
+import { pinWidgetToHomeScreen, updateStepsWidget } from '@/src/widgets/widget-data';
 
 export default function Settings() {
   const { theme, themeName, setTheme } = useTheme();
   const { t, lang } = useI18n();
-  const { state, saveSettings, resetToday, resetAll } = useStore();
+  const { state, today, saveSettings, resetToday, resetAll } = useStore();
   const router = useRouter();
   const [confirmAll, setConfirmAll] = useState(false);
   const [confirmToday, setConfirmToday] = useState(false);
@@ -25,6 +26,17 @@ export default function Settings() {
 
   const openLink = async (url: string) => {
     try { await Linking.openURL(url); } catch {}
+  };
+
+  const handleWidgetToggle = async () => {
+    const nextState = !s.widgetEnabled;
+    saveSettings({ widgetEnabled: nextState });
+
+    if (nextState) {
+      const tData = today();
+      await updateStepsWidget(tData.steps, s.stepGoal);
+      await pinWidgetToHomeScreen();
+    }
   };
 
   const Section = ({ title, children }: any) => (
@@ -73,7 +85,6 @@ export default function Settings() {
           <Row icon="resize" label={t('height')} value={`${state.profile.heightCm} ${s.heightUnit}`} onPress={() => router.push('/(tabs)/body')} testID="settings-height" />
         </Section>
 
-        {/* NATIVE AD SLOT IN SETTINGS */}
         <View style={{ marginTop: 16, marginHorizontal: -16 }}>
           <NativeAdSlot refreshMs={300000} />
         </View>
@@ -130,7 +141,7 @@ export default function Settings() {
 
         <Section title={t('app')}>
           <Row icon="star" label={t('rateApp')} onPress={() => openLink(APP_LINKS.playStore)} testID="settings-rate" />
-          <Row icon="apps" label={t('homeWidget')} right={<Toggle v={s.widgetEnabled} />} onPress={() => toggle('widgetEnabled')} testID="settings-widget" />
+          <Row icon="apps" label={t('homeWidget')} right={<Toggle v={s.widgetEnabled} />} onPress={handleWidgetToggle} testID="settings-widget" />
         </Section>
 
         <Section title={t('data')}>
@@ -147,7 +158,6 @@ export default function Settings() {
         </Section>
       </ScrollView>
 
-      {/* FIXED BOTTOM BANNER AD */}
       <View style={styles.bannerWrap}>
         <BannerAdSlot />
       </View>
