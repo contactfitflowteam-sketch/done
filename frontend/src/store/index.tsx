@@ -7,9 +7,11 @@ export type WorkoutSession = { id: string; type: string; startTs: number; endTs:
 export type DayEntry = { date: string; steps: number; water: number; sleepMin: number; caloriesBurned: number; distanceKm: number; };
 export type Profile = { name: string; gender: 'Male' | 'Female' | 'Other'; birthYear: number; weightKg: number; heightCm: number; stepLengthCm: number | 'auto'; };
 export type Settings = { stepGoal: number; waterGoalMl: number; sleepGoalHr: number; glassSizeMl: number; distanceUnit: 'km' | 'mi'; weightUnit: 'kg' | 'lb'; heightUnit: 'cm' | 'ft'; notifSteps: boolean; notifWater: boolean; notifWorkout: boolean; notifStreak: boolean; onboarded: boolean; permsRequested: boolean; langSelected: boolean; widgetEnabled: boolean; homeAppearance: 'dark' | 'light'; };
-export type HabitState = Record<string, string[]>; // habitId -> array of dates completed
+export type HabitState = Record<string, string[]>;
 
 export type AppState = {
+  isLoading?: boolean;
+  isHydrated?: boolean;
   profile: Profile;
   settings: Settings;
   days: Record<string, DayEntry>;
@@ -23,6 +25,8 @@ const todayKey = () => {
 };
 
 export const DEFAULT_STATE: AppState = {
+  isLoading: false,
+  isHydrated: true,
   profile: { name: 'Guest', gender: 'Male', birthYear: 1995, weightKg: 70, heightCm: 175, stepLengthCm: 'auto' },
   settings: { stepGoal: 15000, waterGoalMl: 2500, sleepGoalHr: 8, glassSizeMl: 250, distanceUnit: 'km', weightUnit: 'kg', heightUnit: 'cm', notifSteps: true, notifWater: true, notifWorkout: true, notifStreak: true, onboarded: false, permsRequested: false, langSelected: false, widgetEnabled: false, homeAppearance: 'dark' },
   days: {},
@@ -34,7 +38,7 @@ type StoreCtx = {
   state: AppState;
   today: () => DayEntry;
   update: (fn: (s: AppState) => AppState) => void;
-  setSteps: (n: number) => void;
+  setSteps: (n: number | ((prev: number) => number)) => void;
   addWater: (ml: number) => void;
   setSleep: (min: number) => void;
   addCalories: (c: number) => void;
@@ -51,18 +55,35 @@ type StoreCtx = {
 const StoreContext = createContext<StoreCtx | null>(null);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AppState>(DEFAULT_STATE);
+  const [state, setState] = useState<AppState>({ ...DEFAULT_STATE, isLoading: true, isHydrated: false });
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(KEY).then((v) => {
-      if (v) try { setState({ ...DEFAULT_STATE, ...JSON.parse(v) }); } catch {}
-      setLoaded(true);
-    });
+    AsyncStorage.getItem(KEY)
+      .then((v) => {
+        if (v) {
+          try {
+            const parsed = JSON.parse(v);
+            setState({ ...DEFAULT_STATE, ...parsed, isLoading: false, isHydrated: true });
+          } catch {
+            setState({ ...DEFAULT_STATE, isLoading: false, isHydrated: true });
+          }
+        } else {
+          setState({ ...DEFAULT_STATE, isLoading: false, isHydrated: true });
+        }
+      })
+      .catch(() => {
+        setState({ ...DEFAULT_STATE, isLoading: false, isHydrated: true });
+      })
+      .finally(() => {
+        setLoaded(true);
+      });
   }, []);
 
   useEffect(() => {
-    if (loaded) AsyncStorage.setItem(KEY, JSON.stringify(state));
+    if (loaded) {
+      AsyncStorage.setItem(KEY, JSON.stringify(state)).catch(() => {});
+    }
   }, [state, loaded]);
 
   const update = useCallback((fn: (s: AppState) => AppState) => setState(fn), []);
@@ -86,12 +107,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const setSteps = (n: number) => {
-    // derive calories & distance from steps
-    const stepLen = state.profile.stepLengthCm === 'auto' ? state.profile.heightCm * 0.415 : state.profile.stepLengthCm;
-    const distanceKm = (n * stepLen) / 100000;
-    const calories = Math.round(n * 0.04 * (state.profile.weightKg / 70));
-    patchToday({ steps: n, distanceKm: parseFloat(distanceKm.toFixed(2)), caloriesBurned: calories });
+  const setSteps = (n: number | ((prev: number) => number)) => {
+    update((s) => {
+      const s2 = ensureToday(s);
+      const k = todayKey();
+      const currentEntry = s2.days[k] || { date: k, steps: 0, water: 0, sleepMin: 0, caloriesBurned: 0, distanceKm: 0 };
+      const newSteps = typeof n === 'function' ? n(currentEntry.steps) : n;
+      
+      const stepLen = s.profile.stepLengthCm === 'auto' ? s.profile.heightCm * 0.415 : s.profile.stepLengthCm;
+      const distanceKm = (newSteps * stepLen) / 100000;
+      const calories = Math.round(newSteps * 0.04 * (s.profile.weightKg / 70));
+
+      return {
+        ...s2,
+        days: {
+          ...s2.days,
+          [k]: {
+            ...currentEntry,
+            steps: newSteps,
+            distanceKm: parseFloat(distanceKm.toFixed(2)),
+            caloriesBurned: calories,
+          },
+        },
+      };
+    });
   };
 
   const addWater = (ml: number) => {
