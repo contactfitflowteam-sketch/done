@@ -1,60 +1,40 @@
 import { useEffect, useRef } from 'react';
 import { Platform, AppState } from 'react-native';
-import { Pedometer } from 'expo-sensors';
 
 import { useStore } from '@/src/store';
 import { updateStepsWidget } from '@/src/widgets/widget-data';
 
 export function useStepTracking() {
   const { setSteps, state } = useStore();
-  const goalRef = useRef(state.settings.stepGoal);
-  goalRef.current = state.settings.stepGoal;
+  const goalRef = useRef(state?.settings?.stepGoal ?? 15000);
+  goalRef.current = state?.settings?.stepGoal ?? 15000;
 
-  const permsRequested = state.settings.permsRequested;
+  const permsRequested = state?.settings?.permsRequested;
+  const langSelected = state?.settings?.langSelected;
 
   useEffect(() => {
-    if (Platform.OS !== 'android') return;
+    // Jab tak user language aur onboarding cross na kare, sensor na start karein
+    if (Platform.OS !== 'android' || !langSelected) return;
 
     let mounted = true;
     let customUnsub: (() => void) | undefined;
     let expoSensorSub: { remove: () => void } | undefined;
 
-    const AndroidPedometer = (() => {
+    const startTracking = async () => {
       try {
-        return require('expo-android-pedometer');
-      } catch {
-        return null;
-      }
-    })();
-
-    const syncNativeSteps = async () => {
-      if (AndroidPedometer) {
-        try {
-          const steps = await AndroidPedometer.getStepsCountAsync();
-          if (mounted && typeof steps === 'number' && !Number.isNaN(steps) && steps > 0) {
-            setSteps(steps);
-            updateStepsWidget(steps, goalRef.current);
-            return true;
-          }
-        } catch {}
-      }
-      return false;
-    };
-
-    (async () => {
-      // 1. Check & Request Sensor Permission
-      try {
-        const isAvailable = await Pedometer.isAvailableAsync();
-        if (isAvailable) {
-          const perm = await Pedometer.requestPermissionsAsync();
-          if (perm.granted) {
-            // Live Step Counter listener (Phone move hone par real-time update)
-            expoSensorSub = Pedometer.watchStepCount((result) => {
+        const { Pedometer } = require('expo-sensors');
+        const isAvailable = await Pedometer.isAvailableAsync().catch(() => false);
+        
+        if (isAvailable && mounted) {
+          const perm = await Pedometer.getPermissionsAsync().catch(() => null);
+          if (perm?.granted) {
+            expoSensorSub = Pedometer.watchStepCount((result: { steps: number }) => {
               if (!mounted) return;
               if (result && typeof result.steps === 'number') {
                 setSteps((prev) => {
-                  const updated = (typeof prev === 'number' ? prev : 0) + 1;
-                  updateStepsWidget(updated, goalRef.current);
+                  const current = typeof prev === 'number' ? prev : 0;
+                  const updated = current + 1;
+                  updateStepsWidget(updated, goalRef.current).catch(() => {});
                   return updated;
                 });
               }
@@ -62,47 +42,48 @@ export function useStepTracking() {
           }
         }
       } catch (e) {
-        console.warn('Expo pedometer init err:', e);
+        console.warn('Sensor safe fallback triggered:', e);
       }
 
-      // 2. Setup Background Hardware Sensor Service
-      if (AndroidPedometer) {
-        try {
-          await AndroidPedometer.initialize();
-          const perm = await AndroidPedometer.getActivityPermissionStatus();
-          if (perm?.granted) {
-            await AndroidPedometer.setupBackgroundUpdates({
-              title: 'FitFlow',
-              contentTemplate: "You've walked %d steps today",
-              style: 'bigText',
-              iconResourceName: 'ic_launcher',
-            });
+      try {
+        const AndroidPedometer = require('expo-android-pedometer');
+        if (AndroidPedometer && mounted) {
+          await AndroidPedometer.initialize().catch(() => {});
+          const steps = await AndroidPedometer.getStepsCountAsync().catch(() => null);
+          
+          if (mounted && typeof steps === 'number' && !Number.isNaN(steps) && steps > 0) {
+            setSteps(steps);
+            updateStepsWidget(steps, goalRef.current).catch(() => {});
           }
-
-          await syncNativeSteps();
 
           customUnsub = AndroidPedometer.subscribeToChange((event: { steps: number }) => {
             if (!mounted) return;
             if (typeof event?.steps === 'number' && !Number.isNaN(event.steps)) {
               setSteps(event.steps);
-              updateStepsWidget(event.steps, goalRef.current);
+              updateStepsWidget(event.steps, goalRef.current).catch(() => {});
             }
           });
-        } catch {}
-      }
-    })();
+        }
+      } catch {}
+    };
+
+    // Safe delay to let UI mount smoothly
+    const timer = setTimeout(() => {
+      startTracking();
+    }, 1000);
 
     const appStateSub = AppState.addEventListener('change', (next) => {
       if (next === 'active') {
-        syncNativeSteps();
+        startTracking();
       }
     });
 
     return () => {
       mounted = false;
+      clearTimeout(timer);
       try { customUnsub && customUnsub(); } catch {}
       try { expoSensorSub && expoSensorSub.remove(); } catch {}
       appStateSub.remove();
     };
-  }, [permsRequested, setSteps]);
+  }, [permsRequested, langSelected, setSteps]);
 }
