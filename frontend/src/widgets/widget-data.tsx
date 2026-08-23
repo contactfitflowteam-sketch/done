@@ -39,9 +39,6 @@ export async function updateStepsWidget(steps: number, goal: number): Promise<vo
   } catch {}
 }
 
-/**
- * Direct System Popup trigger karta hai: "Add to Home Screen?"
- */
 export async function pinWidgetToHomeScreen(): Promise<boolean> {
   if (Platform.OS !== 'android') return false;
   try {
@@ -49,11 +46,12 @@ export async function pinWidgetToHomeScreen(): Promise<boolean> {
     if (typeof requestWidgetPin === 'function') {
       const success = await requestWidgetPin({
         widgetName: WIDGET_NAME,
+        renderWidget: () => <StepsWidget steps={0} goal={15000} />,
       });
       return success;
     }
   } catch (e) {
-    console.warn('Widget Pin Request not supported or failed:', e);
+    console.warn('Widget Pin Request failed:', e);
   }
   return false;
 }
