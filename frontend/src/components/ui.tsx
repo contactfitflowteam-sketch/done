@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet, ViewStyle, TextStyle, ScrollView, Platform } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ViewStyle, TextStyle, ScrollView, Platform, Modal } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Defs, LinearGradient, Stop, Path, G, Line, Rect, Text as SvgText } from 'react-native-svg';
 import { useTheme, Palette } from '../theme';
@@ -214,9 +215,6 @@ export const Row: React.FC<{ icon?: React.ComponentProps<typeof Ionicons>['name'
 };
 
 // ---------- Ad Banner Placeholder ----------
-// NOTE: react-native-google-mobile-ads requires a native dev build (does not work in Expo Go).
-// This is a stub that renders a labelled placeholder during preview. Replace with the real
-// BannerAd (from react-native-google-mobile-ads) using AD_UNITS.banner when running a dev build.
 export const AdBanner: React.FC<{ testID?: string }> = ({ testID }) => {
   const { theme } = useTheme();
   return (
@@ -228,8 +226,6 @@ export const AdBanner: React.FC<{ testID?: string }> = ({ testID }) => {
 };
 
 // ---------- Native Ad Card (premium, matches FitFlow design) ----------
-// Stub matching the design language. In a native dev build, populate the fields
-// from NativeAd.createForAdRequest(AD_UNITS.native) and wrap assets in <NativeAsset>.
 export const NativeAdCard: React.FC<{ testID?: string; style?: ViewStyle }> = ({ testID, style }) => {
   const { theme } = useTheme();
   return (
@@ -255,18 +251,36 @@ export const NativeAdCard: React.FC<{ testID?: string; style?: ViewStyle }> = ({
   );
 };
 
-// ---------- Bottom sheet-ish modal wrapper ----------
+// ---------- Bottom sheet-ish modal wrapper (Native Modal with Insets) ----------
 export const Sheet: React.FC<{ visible: boolean; onClose: () => void; children: React.ReactNode; title?: string }> = ({ visible, onClose, children, title }) => {
   const { theme } = useTheme();
-  if (!visible) return null;
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.sheetOverlay}>
-      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-      <View style={[styles.sheet, { backgroundColor: theme.bgElev, borderColor: theme.cardBorder }]}>
-        {title && <Text style={{ color: theme.text, fontSize: 18, fontWeight: '700', marginBottom: 12 }}>{title}</Text>}
-        {children}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      <View style={styles.sheetOverlay}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <View
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: theme.bgElev,
+              borderColor: theme.cardBorder,
+              paddingBottom: Math.max(insets.bottom, 16) + 24,
+            },
+          ]}
+        >
+          {title && <Text style={{ color: theme.text, fontSize: 18, fontWeight: '700', marginBottom: 16 }}>{title}</Text>}
+          {children}
+        </View>
       </View>
-    </View>
+    </Modal>
   );
 };
 
@@ -290,6 +304,6 @@ const styles = StyleSheet.create({
   adIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   sponsoredTag: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 8 },
   adCta: { marginTop: 12, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 10, alignItems: 'center' },
-  sheetOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end', zIndex: 1000 },
-  sheet: { padding: 20, borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1, paddingBottom: 32 },
+  sheetOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  sheet: { padding: 20, borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1 },
 });
