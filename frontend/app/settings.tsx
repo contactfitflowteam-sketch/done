@@ -152,8 +152,8 @@ export default function Settings() {
 
         <Section title={t('about')}>
           <Row icon="information-circle" label={t('appVersion')} value={Application.nativeApplicationVersion || '1.0.0'} testID="settings-version" />
-          <Row icon="shield" label={t('privacyPolicy')} onPress={() => router.push('/settings/privacy')} testID="settings-privacy" />
-          <Row icon="document-text" label={t('terms')} onPress={() => router.push('/settings/terms')} testID="settings-terms" />
+          <Row icon="shield" label={t('privacyPolicy')} onPress={() => openLink('https://telegra.ph/Privacy-Policy---FitFlow-08-26')} testID="settings-privacy" />
+          <Row icon="document-text" label={t('terms')} onPress={() => openLink('https://telegra.ph/Terms-and-Conditions---FitFlow-08-26')} testID="settings-terms" />
           <Row icon="mail" label={t('contact')} onPress={() => openLink(`mailto:${APP_LINKS.supportEmail}`)} testID="settings-contact" />
         </Section>
       </ScrollView>
