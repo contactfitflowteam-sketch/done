@@ -10,12 +10,24 @@ import { useStepTracking } from '@/src/hooks/use-step-tracking';
 import { ThemeProvider, useTheme } from '@/src/theme';
 import { StoreProvider, useStore } from '@/src/store';
 import { I18nProvider } from '@/src/i18n';
+import { scheduleStepNotification, requestNotificationPermission } from '@/src/utils/notifications';
 
 LogBox.ignoreAllLogs(true);
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function StepTrackingBridge() {
   useStepTracking();
+  const { today } = useStore();
+  const todayData = today();
+
+  useEffect(() => {
+    requestNotificationPermission();
+
+    if (todayData) {
+      scheduleStepNotification(todayData.steps || 0, todayData.calories || 0);
+    }
+  }, [todayData?.steps, todayData?.calories]);
+
   return null;
 }
 
