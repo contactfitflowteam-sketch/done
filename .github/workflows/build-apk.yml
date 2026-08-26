@@ -50,7 +50,7 @@ jobs:
         working-directory: ./frontend
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
-        run: yarn install --ignore-scripts || yarn install
+        run: yarn install --ignore-scripts
 
       - name: Expo prebuild (Android)
         working-directory: ./frontend
@@ -58,21 +58,11 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: npx expo prebuild --platform android --clean --no-install
 
-      - name: Pre-bundle JS assets
-        working-directory: ./frontend
-        env:
-          NODE_OPTIONS: "--max-old-space-size=4096"
-        run: |
-          mkdir -p android/app/src/main/assets
-          npx expo export --platform android
-
-      - name: Configure Gradle Memory
+      - name: Configure Gradle Environment
         run: |
           mkdir -p ~/.gradle
-          echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError" >> ~/.gradle/gradle.properties
+          echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m" >> ~/.gradle/gradle.properties
           echo "org.gradle.daemon=false" >> ~/.gradle/gradle.properties
-          echo "android.useAndroidX=true" >> ~/.gradle/gradle.properties
-          echo "android.enableJetifier=true" >> ~/.gradle/gradle.properties
 
       - name: Generate release signing keystore
         run: |
@@ -92,7 +82,6 @@ jobs:
         working-directory: ./frontend/android
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
-          GRADLE_OPTS: "-Xmx4096m -XX:MaxMetaspaceSize=1024m"
           EXPO_PUBLIC_AD_MODE: ${{ env.EXPO_PUBLIC_AD_MODE }}
           EXPO_PUBLIC_ADMOB_BANNER_ID: ${{ env.EXPO_PUBLIC_ADMOB_BANNER_ID }}
           EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID: ${{ env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID }}
