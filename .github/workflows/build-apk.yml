@@ -52,6 +52,12 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: yarn install --ignore-scripts
 
+      - name: Test JS Bundling (Instant Error Catch)
+        working-directory: ./frontend
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        run: npx expo export --platform android --no-minify
+
       - name: Expo prebuild (Android)
         working-directory: ./frontend
         env:
@@ -87,13 +93,12 @@ jobs:
           EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID: ${{ env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID }}
           EXPO_PUBLIC_ADMOB_NATIVE_ID: ${{ env.EXPO_PUBLIC_ADMOB_NATIVE_ID }}
         run: |
-          set -o pipefail
           ./gradlew assembleRelease --no-daemon --stacktrace \
             -x lint -x lintVitalRelease -x lintVitalAnalyzeRelease -x test \
             -Pandroid.injected.signing.store.file=${{ github.workspace }}/release.keystore \
             -Pandroid.injected.signing.store.password=fitflowpass \
             -Pandroid.injected.signing.key.alias=fitflowkey \
-            -Pandroid.injected.signing.key.password=fitflowpass 2>&1 | tee build.log || (echo -e "\n\n========== EXACT ERROR ==========\n"; grep -E "(\* What went wrong|Execution failed|FAILURE:|error:|FAILED)" -A 10 -B 2 build.log | tail -n 35; exit 1)
+            -Pandroid.injected.signing.key.password=fitflowpass
 
       - name: Find and copy APK
         run: |
