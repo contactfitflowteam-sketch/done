@@ -12,19 +12,14 @@ const TRACK = '#2A2A2A';
 const WHITE = '#FFFFFF';
 const GREY = '#B8B8B8';
 
-/**
- * FitFlow home-screen widget.
- * Rendered natively by react-native-android-widget (no DOM / RN Views here —
- * only the library's FlexWidget / TextWidget primitives are allowed).
- * Tapping anywhere opens the app (clickAction OPEN_APP on the root).
- */
 export function StepsWidget({ steps, goal }: StepsWidgetData) {
   const safeGoal = goal > 0 ? goal : 1;
   const pct = Math.min(1, steps / safeGoal);
   const pctInt = Math.round(pct * 100);
-  // progress bar via flex proportions (avoid 0 which collapses layout)
-  const fillFlex = Math.max(0.0001, pct);
-  const restFlex = Math.max(0.0001, 1 - pct);
+
+  // Integer weights for Android RemoteViews (1 to 100)
+  const fillWeight = Math.max(1, Math.round(pct * 100));
+  const restWeight = Math.max(1, 100 - fillWeight);
 
   return (
     <FlexWidget
@@ -41,13 +36,13 @@ export function StepsWidget({ steps, goal }: StepsWidgetData) {
     >
       {/* Header */}
       <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: 'match_parent' }}>
-        <TextWidget text="FitFlow" style={{ fontSize: 13, fontWeight: '700', color: ORANGE }} />
-        <TextWidget text={`${pctInt}% Complete`} style={{ fontSize: 11, fontWeight: '700', color: ORANGE }} />
+        <TextWidget text="FitFlow" style={{ fontSize: 13, fontWeight: 'bold', color: ORANGE }} />
+        <TextWidget text={`${pctInt}% Complete`} style={{ fontSize: 11, fontWeight: 'bold', color: ORANGE }} />
       </FlexWidget>
 
       {/* Steps */}
       <FlexWidget style={{ flexDirection: 'column', width: 'match_parent' }}>
-        <TextWidget text={steps.toLocaleString()} style={{ fontSize: 30, fontWeight: '900', color: WHITE }} />
+        <TextWidget text={String(steps)} style={{ fontSize: 28, fontWeight: 'bold', color: WHITE }} />
         <TextWidget text="Steps today" style={{ fontSize: 12, color: GREY, marginTop: 2 }} />
       </FlexWidget>
 
@@ -58,16 +53,16 @@ export function StepsWidget({ steps, goal }: StepsWidgetData) {
           height: 8,
           width: 'match_parent',
           backgroundColor: TRACK,
-          borderRadius: 8,
+          borderRadius: 4,
           marginTop: 8,
         }}
       >
-        <FlexWidget style={{ flex: fillFlex, height: 8, backgroundColor: ORANGE, borderRadius: 8 }} />
-        <FlexWidget style={{ flex: restFlex, height: 8, backgroundColor: TRACK, borderRadius: 8 }} />
+        <FlexWidget style={{ flex: fillWeight, height: 8, backgroundColor: ORANGE, borderRadius: 4 }} />
+        <FlexWidget style={{ flex: restWeight, height: 8, backgroundColor: TRACK, borderRadius: 4 }} />
       </FlexWidget>
 
       {/* Goal */}
-      <TextWidget text={`Goal: ${goal.toLocaleString()}`} style={{ fontSize: 12, color: GREY, marginTop: 8 }} />
+      <TextWidget text={`Goal: ${String(goal)}`} style={{ fontSize: 12, color: GREY, marginTop: 8 }} />
     </FlexWidget>
   );
 }
