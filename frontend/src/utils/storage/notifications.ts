@@ -1,43 +1,29 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
-// Global notification handler setup
-try {
-  if (Platform.OS !== 'web') {
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-      }),
-    });
-  }
-} catch {}
+// Top-level configuration
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 export async function requestNotificationPermission(): Promise<boolean> {
-  if (Platform.OS !== 'android' && Platform.OS !== 'ios') return false;
+  if (Platform.OS !== 'android') return false;
   try {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') return false;
 
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-
-    if (finalStatus !== 'granted') {
-      return false;
-    }
-
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('step-updates', {
-        name: 'Step & Calorie Updates',
-        importance: Notifications.AndroidImportance.HIGH,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF7A00',
-      });
-    }
-
+    await Notifications.setNotificationChannelAsync('step-updates', {
+      name: 'Step & Calorie Updates',
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF7A00',
+    });
     return true;
   } catch {
     return false;
@@ -45,49 +31,48 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 export async function scheduleStepNotification(steps: number, calories: number) {
-  if (Platform.OS !== 'android' && Platform.OS !== 'ios') return;
+  if (Platform.OS !== 'android') return;
   try {
-    const hasPermission = await requestNotificationPermission();
-    if (!hasPermission) return;
+    const granted = await requestNotificationPermission();
+    if (!granted) return;
 
     await Notifications.cancelAllScheduledNotificationsAsync();
 
+    // Morning Notification (48 Hours - 8:00 AM)
     const now = new Date();
-
-    // 1. Morning Notification: +48 Hours at 08:00 AM
     const morningDate = new Date();
     morningDate.setDate(now.getDate() + 2);
     morningDate.setHours(8, 0, 0, 0);
-    const morningSeconds = Math.max(60, Math.floor((morningDate.getTime() - now.getTime()) / 1000));
+    const morningSec = Math.max(60, Math.floor((morningDate.getTime() - now.getTime()) / 1000));
 
     await Notifications.scheduleNotificationAsync({
       content: {
         title: '☀️ Morning Activity Check!',
-        body: `You are at ${steps.toLocaleString()} steps and burned ${Math.round(calories)} kcal. Keep moving today!`,
-        sound: true,
+        body: `You are at ${steps.toLocaleString()} steps and burned ${Math.round(calories)} kcal. Keep moving!`,
       },
       trigger: {
-        seconds: morningSeconds,
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: morningSec,
         repeats: false,
-      } as any,
+      },
     });
 
-    // 2. Night Notification: +48 Hours at 09:00 PM (21:00)
+    // Night Notification (48 Hours - 9:00 PM)
     const nightDate = new Date();
     nightDate.setDate(now.getDate() + 2);
     nightDate.setHours(21, 0, 0, 0);
-    const nightSeconds = Math.max(60, Math.floor((nightDate.getTime() - now.getTime()) / 1000));
+    const nightSec = Math.max(60, Math.floor((nightDate.getTime() - now.getTime()) / 1000));
 
     await Notifications.scheduleNotificationAsync({
       content: {
         title: '🌙 Night Step Summary',
         body: `Activity summary: ${steps.toLocaleString()} steps | ${Math.round(calories)} kcal burned. Good job!`,
-        sound: true,
       },
       trigger: {
-        seconds: nightSeconds,
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: nightSec,
         repeats: false,
-      } as any,
+      },
     });
   } catch {}
 }
