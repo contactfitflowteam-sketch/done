@@ -1,8 +1,9 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
-if (Platform.OS !== 'web') {
-  try {
+// Global notification handler setup
+try {
+  if (Platform.OS !== 'web') {
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
@@ -10,11 +11,11 @@ if (Platform.OS !== 'web') {
         shouldSetBadge: false,
       }),
     });
-  } catch {}
-}
+  }
+} catch {}
 
 export async function requestNotificationPermission(): Promise<boolean> {
-  if (Platform.OS === 'web') return false;
+  if (Platform.OS !== 'android' && Platform.OS !== 'ios') return false;
   try {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
@@ -38,14 +39,13 @@ export async function requestNotificationPermission(): Promise<boolean> {
     }
 
     return true;
-  } catch (e) {
-    console.warn('[Notification] Permission error:', e);
+  } catch {
     return false;
   }
 }
 
 export async function scheduleStepNotification(steps: number, calories: number) {
-  if (Platform.OS === 'web') return;
+  if (Platform.OS !== 'android' && Platform.OS !== 'ios') return;
   try {
     const hasPermission = await requestNotificationPermission();
     if (!hasPermission) return;
@@ -54,7 +54,7 @@ export async function scheduleStepNotification(steps: number, calories: number) 
 
     const now = new Date();
 
-    // 1. Morning Notification: Next 48 Hours at 08:00 AM
+    // 1. Morning Notification: +48 Hours at 08:00 AM
     const morningDate = new Date();
     morningDate.setDate(now.getDate() + 2);
     morningDate.setHours(8, 0, 0, 0);
@@ -63,17 +63,16 @@ export async function scheduleStepNotification(steps: number, calories: number) 
     await Notifications.scheduleNotificationAsync({
       content: {
         title: '☀️ Morning Activity Check!',
-        body: `You are at ${steps.toLocaleString()} steps and burned ${calories.toFixed(0)} kcal. Keep moving today!`,
+        body: `You are at ${steps.toLocaleString()} steps and burned ${Math.round(calories)} kcal. Keep moving today!`,
         sound: true,
       },
       trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
         seconds: morningSeconds,
         repeats: false,
-      },
+      } as any,
     });
 
-    // 2. Night Notification: Next 48 Hours at 09:00 PM (21:00)
+    // 2. Night Notification: +48 Hours at 09:00 PM (21:00)
     const nightDate = new Date();
     nightDate.setDate(now.getDate() + 2);
     nightDate.setHours(21, 0, 0, 0);
@@ -82,16 +81,13 @@ export async function scheduleStepNotification(steps: number, calories: number) 
     await Notifications.scheduleNotificationAsync({
       content: {
         title: '🌙 Night Step Summary',
-        body: `Activity summary: ${steps.toLocaleString()} steps | ${calories.toFixed(0)} kcal burned. Good job!`,
+        body: `Activity summary: ${steps.toLocaleString()} steps | ${Math.round(calories)} kcal burned. Good job!`,
         sound: true,
       },
       trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
         seconds: nightSeconds,
         repeats: false,
-      },
+      } as any,
     });
-  } catch (e) {
-    console.warn('[Notification] Schedule error:', e);
-  }
+  } catch {}
 }
