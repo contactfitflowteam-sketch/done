@@ -1,16 +1,17 @@
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
-
 export async function requestNotificationPermission(): Promise<boolean> {
+  if (Platform.OS === 'web') return false;
   try {
+    const Notifications = await import('expo-notifications');
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
@@ -33,16 +34,19 @@ export async function requestNotificationPermission(): Promise<boolean> {
     }
 
     return true;
-  } catch {
+  } catch (e) {
+    console.warn('[Notification] Permission error:', e);
     return false;
   }
 }
 
 export async function scheduleStepNotification(steps: number, calories: number) {
+  if (Platform.OS === 'web') return;
   try {
     const hasPermission = await requestNotificationPermission();
     if (!hasPermission) return;
 
+    const Notifications = await import('expo-notifications');
     await Notifications.cancelAllScheduledNotificationsAsync();
 
     const now = new Date();
@@ -83,6 +87,6 @@ export async function scheduleStepNotification(steps: number, calories: number) 
       } as any,
     });
   } catch (e) {
-    console.warn('[Notification] schedule error:', e);
+    console.warn('[Notification] Schedule error:', e);
   }
 }
