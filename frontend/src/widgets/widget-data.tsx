@@ -1,7 +1,6 @@
-import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React from 'react';
-
+import { Platform, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StepsWidget, StepsWidgetData } from './StepsWidget';
 
 const WIDGET_KEY = '@fitflow.widget';
@@ -36,22 +35,36 @@ export async function updateStepsWidget(steps: number, goal: number): Promise<vo
         widgetNotFound: () => {},
       });
     }
-  } catch {}
+  } catch (e) {
+    console.warn('[Widget] Update error:', e);
+  }
 }
 
 export async function pinWidgetToHomeScreen(): Promise<boolean> {
   if (Platform.OS !== 'android') return false;
   try {
-    const { requestWidgetPin } = require('react-native-android-widget');
-    if (typeof requestWidgetPin === 'function') {
-      const success = await requestWidgetPin({
+    const widgetLib = require('react-native-android-widget');
+    // Dono function names check karega taaki version mismatch na ho
+    const pinFunc = widgetLib.requestPinWidget || widgetLib.requestWidgetPin;
+
+    if (typeof pinFunc === 'function') {
+      const success = await pinFunc({
         widgetName: WIDGET_NAME,
         renderWidget: () => <StepsWidget steps={0} goal={15000} />,
       });
       return success;
+    } else {
+      Alert.alert(
+        'Add Widget',
+        'Long-press on your phone home screen, select "Widgets", and choose FitFlow Steps widget.'
+      );
     }
   } catch (e) {
-    console.warn('Widget Pin Request failed:', e);
+    console.warn('[Widget] Pin error:', e);
+    Alert.alert(
+      'Add Widget',
+      'Please long-press your home screen and add the FitFlow widget manually.'
+    );
   }
   return false;
 }
