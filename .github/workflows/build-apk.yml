@@ -58,11 +58,18 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: npx expo prebuild --platform android --clean --no-install
 
-      - name: Configure Gradle Memory & Properties
+      - name: Pre-bundle JS assets
+        working-directory: ./frontend
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+        run: |
+          mkdir -p android/app/src/main/assets
+          npx expo export --platform android
+
+      - name: Configure Gradle Memory
         run: |
           mkdir -p ~/.gradle
           echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError" >> ~/.gradle/gradle.properties
-          echo "org.gradle.parallel=true" >> ~/.gradle/gradle.properties
           echo "org.gradle.daemon=false" >> ~/.gradle/gradle.properties
           echo "android.useAndroidX=true" >> ~/.gradle/gradle.properties
           echo "android.enableJetifier=true" >> ~/.gradle/gradle.properties
