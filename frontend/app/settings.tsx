@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, Linking } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Application from 'expo-application';
 import { useTheme, THEMES, ThemeName } from '@/src/theme';
@@ -16,6 +16,7 @@ export default function Settings() {
   const { theme, themeName, setTheme } = useTheme();
   const { t, lang } = useI18n();
   const { state, today, saveSettings, resetToday, resetAll } = useStore();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [confirmAll, setConfirmAll] = useState(false);
   const [confirmToday, setConfirmToday] = useState(false);
@@ -25,7 +26,9 @@ export default function Settings() {
   const currentLang = LANGUAGES.find((l) => l.code === lang);
 
   const openLink = async (url: string) => {
-    try { await Linking.openURL(url); } catch {}
+    try { 
+      await Linking.openURL(url); 
+    } catch {}
   };
 
   const handleWidgetToggle = async () => {
@@ -72,7 +75,9 @@ export default function Settings() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }} edges={['top']} testID="settings-screen">
       <ScreenHeader title={t('settings')} onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}>
+      
+      {/* 160 padding bottom ensure karta hai ki last buttons banner ad ke peeche na dabein */}
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 160 }}>
         <Section title={t('general')}>
           <Row icon="language" label={t('changeLanguage')} value={`${currentLang?.flag} ${currentLang?.native}`} onPress={() => router.push('/language')} testID="settings-language" />
         </Section>
@@ -152,19 +157,20 @@ export default function Settings() {
 
         <Section title={t('about')}>
           <Row icon="information-circle" label={t('appVersion')} value={Application.nativeApplicationVersion || '1.0.0'} testID="settings-version" />
-          <Row icon="shield" label={t('privacyPolicy')} onPress={() => openLink('https://telegra.ph/Privacy-Policy---FitFlow-08-26')} testID="settings-privacy" />
-          <Row icon="document-text" label={t('terms')} onPress={() => openLink('https://telegra.ph/Terms-and-Conditions---FitFlow-08-26')} testID="settings-terms" />
+          <Row icon="shield" label={t('privacyPolicy')} onPress={() => router.push('/settings/privacy')} testID="settings-privacy" />
+          <Row icon="document-text" label={t('terms')} onPress={() => router.push('/settings/terms')} testID="settings-terms" />
           <Row icon="mail" label={t('contact')} onPress={() => openLink(`mailto:${APP_LINKS.supportEmail}`)} testID="settings-contact" />
         </Section>
       </ScrollView>
 
-      <View style={styles.bannerWrap}>
+      {/* Banner Ad wrapper bottom tabs ke upar fixed rahega */}
+      <View style={[styles.bannerWrap, { bottom: Math.max(insets.bottom, 12) + 60 }]}>
         <BannerAdSlot />
       </View>
 
       <Sheet visible={confirmToday} onClose={() => setConfirmToday(false)} title={t('resetTitle')}>
         <Text style={{ color: theme.textMuted, marginBottom: 20 }}>{t('resetBody')}</Text>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
+        <View style={{ flexDirection: 'row', gap: 12, paddingBottom: 10 }}>
           <View style={{ flex: 1 }}><PillButton label={t('cancel')} onPress={() => setConfirmToday(false)} variant="ghost" /></View>
           <View style={{ flex: 1 }}><PillButton label={t('reset')} onPress={() => { resetToday(); setConfirmToday(false); }} variant="danger" testID="confirm-reset-today" /></View>
         </View>
@@ -172,7 +178,7 @@ export default function Settings() {
 
       <Sheet visible={confirmAll} onClose={() => setConfirmAll(false)} title={t('resetAllTitle')}>
         <Text style={{ color: theme.textMuted, marginBottom: 20 }}>{t('resetAllBody')}</Text>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
+        <View style={{ flexDirection: 'row', gap: 12, paddingBottom: 10 }}>
           <View style={{ flex: 1 }}><PillButton label={t('cancel')} onPress={() => setConfirmAll(false)} variant="ghost" /></View>
           <View style={{ flex: 1 }}><PillButton label={t('deleteAll')} onPress={() => { resetAll(); setConfirmAll(false); }} variant="danger" testID="confirm-reset-all" /></View>
         </View>
@@ -187,10 +193,10 @@ const styles = StyleSheet.create({
   togBall: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#FFFFFF' },
   bannerWrap: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
     alignItems: 'center',
     backgroundColor: 'transparent',
+    zIndex: 10,
   },
 });
