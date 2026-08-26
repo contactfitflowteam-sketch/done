@@ -58,6 +58,15 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=4096"
         run: npx expo prebuild --platform android --clean --no-install
 
+      - name: Configure Gradle Memory & Properties
+        run: |
+          mkdir -p ~/.gradle
+          echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError" >> ~/.gradle/gradle.properties
+          echo "org.gradle.parallel=true" >> ~/.gradle/gradle.properties
+          echo "org.gradle.daemon=false" >> ~/.gradle/gradle.properties
+          echo "android.useAndroidX=true" >> ~/.gradle/gradle.properties
+          echo "android.enableJetifier=true" >> ~/.gradle/gradle.properties
+
       - name: Generate release signing keystore
         run: |
           keytool -genkeypair -v \
@@ -76,6 +85,7 @@ jobs:
         working-directory: ./frontend/android
         env:
           NODE_OPTIONS: "--max-old-space-size=4096"
+          GRADLE_OPTS: "-Xmx4096m -XX:MaxMetaspaceSize=1024m"
           EXPO_PUBLIC_AD_MODE: ${{ env.EXPO_PUBLIC_AD_MODE }}
           EXPO_PUBLIC_ADMOB_BANNER_ID: ${{ env.EXPO_PUBLIC_ADMOB_BANNER_ID }}
           EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID: ${{ env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ID }}
