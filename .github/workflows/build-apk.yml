@@ -48,10 +48,14 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: ./frontend
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
         run: yarn install
 
       - name: Expo prebuild (Android)
         working-directory: ./frontend
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
         run: npx expo prebuild --platform android --clean --no-install
 
       - name: Generate release signing keystore
