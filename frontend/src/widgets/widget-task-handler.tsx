@@ -9,7 +9,7 @@ const nameToWidget = {
 };
 
 export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
-  const widgetName = props.widgetInfo.widgetName as keyof typeof nameToWidget;
+  const widgetName = (props.widgetInfo?.widgetName || 'StepsWidget') as keyof typeof nameToWidget;
   const Widget = nameToWidget[widgetName] || StepsWidget;
 
   switch (props.widgetAction) {
@@ -18,7 +18,12 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
     case 'WIDGET_RESIZED':
     case 'WIDGET_CLICK': {
       const data = await loadWidgetData();
-      props.renderWidget(<Widget steps={data.steps ?? 0} goal={data.goal ?? 15000} />);
+      props.renderWidget(
+        <Widget 
+          steps={data?.steps ?? 0} 
+          goal={data?.goal ?? 15000} 
+        />
+      );
       break;
     }
     case 'WIDGET_DELETED':
